@@ -281,7 +281,7 @@ router.post('/diagnose', async (req: Request, res: Response) => {
       // Try to rescue just the agentMessage field before falling back to raw content
       const rescued = rawContent.match(/"agentMessage"\s*:\s*"((?:[^"\\]|\\.)*)"/)
       const fallbackMsg = rescued
-        ? rescued[1]
+        ? rescued[1]!
             .replace(/\\n/g, '\n')
             .replace(/\\t/g, '\t')
             .replace(/\\"/g, '"')
@@ -305,66 +305,42 @@ router.post('/diagnose', async (req: Request, res: Response) => {
       presentationName: safeCtx.presentationName ?? '',
       completeness: parsed.completeness, // Placeholder, will be recalculated
       updatedAt: new Date().toISOString(),
-      event: {
-        type: '',
-        name: '',
-        date: '',
-        format: 'presencial',
-        durationMinutes: 0,
-        qaMinutes: 0,
-        language: 'español',
-        location: '',
-        formalityLevel: 5,
-        ...(safeCtx.event ?? {}),
-        ...(parsed.updatedFields?.event ?? {}),
-      },
-      audience: {
-        segments: [],
-        emotionalBaseline: '',
-        size: 0,
-        primaryMotivation: '',
-        primaryFear: '',
-        attentionMinutes: 0,
-        familiarity: '',
-        ...(safeCtx.audience ?? {}),
-        ...(parsed.updatedFields?.audience ?? {}),
-      },
-      objective: {
-        primary: '',
-        desiredAction: '',
-        successMetric: '',
-        mustRemember: '',
-        mustFeel: '',
-        ...(safeCtx.objective ?? {}),
-        ...(parsed.updatedFields?.objective ?? {}),
-      },
+      event: Object.assign(
+        { type: '', name: '', date: '', format: 'presencial', durationMinutes: 0, qaMinutes: 0, language: 'español', location: '', formalityLevel: 5 },
+        safeCtx.event ?? {},
+        parsed.updatedFields?.event ?? {}
+      ) as Zone1Context['event'],
+      audience: Object.assign(
+        { segments: [], emotionalBaseline: '', size: 0, primaryMotivation: '', primaryFear: '', attentionMinutes: 0, familiarity: '' },
+        safeCtx.audience ?? {},
+        parsed.updatedFields?.audience ?? {}
+      ) as Zone1Context['audience'],
+      objective: Object.assign(
+        { primary: '', desiredAction: '', successMetric: '', mustRemember: '', mustFeel: '' },
+        safeCtx.objective ?? {},
+        parsed.updatedFields?.objective ?? {}
+      ) as Zone1Context['objective'],
       tone: (() => {
-        const { arc: _arc1, ...toneBase } = safeCtx.tone ?? { primary: '', narrativeArc: '', hook: '', proof: '', humorAllowed: false as boolean }
+        const { arc: _arc1, ...toneBase } = safeCtx.tone ?? {}
         const { arc: _arc2, ...toneUpdates } = parsed.updatedFields?.tone ?? {}
-        return {
-          primary: '',
-          narrativeArc: '',
-          hook: '',
-          proof: '',
-          humorAllowed: false,
-          ...toneBase,
-          ...toneUpdates,
-          arc: {
-            opening: '',
-            middle: '',
-            closing: '',
-            ...(safeCtx.tone?.arc ?? {}),
-            ...(parsed.updatedFields?.tone?.arc ?? {}),
-          },
-        }
+        return Object.assign(
+          { primary: '', narrativeArc: '', hook: '', proof: '', humorAllowed: false },
+          toneBase,
+          toneUpdates,
+          {
+            arc: Object.assign(
+              { opening: '', middle: '', closing: '' },
+              safeCtx.tone?.arc ?? {},
+              parsed.updatedFields?.tone?.arc ?? {}
+            ) as Zone1Context['tone']['arc'],
+          }
+        ) as Zone1Context['tone']
       })(),
-      constraints: {
-        avoidTopics: [],
-        mandatoryTopics: [],
-        previousContext: '',
-        ...(safeCtx.constraints ?? {}),
-        ...(parsed.updatedFields?.constraints ?? {}),
-      },
+      constraints: Object.assign(
+        { avoidTopics: [], mandatoryTopics: [], previousContext: '' },
+        safeCtx.constraints ?? {},
+        parsed.updatedFields?.constraints ?? {}
+      ) as Zone1Context['constraints'],
       riskFlags: [
         ...(safeCtx.riskFlags ?? []),
         ...(parsed.newRiskFlags ?? []),
