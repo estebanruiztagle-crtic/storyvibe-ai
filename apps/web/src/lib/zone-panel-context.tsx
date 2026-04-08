@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
 type PanelState = {
-  type: 'zone1' | 'zone2' | 'zone2a' | 'zone2b' | 'emotional_curve' | 'act3' | null
+  type: 'zone1' | 'zone2' | 'zone2a' | 'zone2b' | 'zone3' | 'zone4' | 'zone5' | 'emotional_curve' | 'act3' | null
   shapeId: string | null
 }
 
