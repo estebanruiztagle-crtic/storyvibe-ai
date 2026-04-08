@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
+import type { TextBlock } from '@anthropic-ai/sdk/resources/messages'
 
 const router = Router()
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -239,7 +240,7 @@ router.post('/diagnose', async (req: Request, res: Response) => {
     }
 
     // Ensure the last message is from the user (Claude requires alternating turns ending with user)
-    if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+    if (messages.length > 0 && messages[messages.length - 1]!.role === 'assistant') {
       messages.push({
         role: 'user',
         content: 'Continúa con la siguiente pregunta.',
@@ -253,8 +254,9 @@ router.post('/diagnose', async (req: Request, res: Response) => {
       messages,
     })
 
+    const firstBlock = response.content[0]
     const rawContent =
-      response.content[0].type === 'text' ? response.content[0].text : ''
+      firstBlock?.type === 'text' ? (firstBlock as TextBlock).text : ''
 
     // Parse JSON response from Claude
     let parsed: {
@@ -336,22 +338,26 @@ router.post('/diagnose', async (req: Request, res: Response) => {
         ...(safeCtx.objective ?? {}),
         ...(parsed.updatedFields?.objective ?? {}),
       },
-      tone: {
-        primary: '',
-        narrativeArc: '',
-        hook: '',
-        proof: '',
-        humorAllowed: false,
-        ...(safeCtx.tone ?? {}),
-        ...(parsed.updatedFields?.tone ?? {}),
-        arc: {
-          opening: '',
-          middle: '',
-          closing: '',
-          ...(safeCtx.tone?.arc ?? {}),
-          ...(parsed.updatedFields?.tone?.arc ?? {}),
-        },
-      },
+      tone: (() => {
+        const { arc: _arc1, ...toneBase } = safeCtx.tone ?? { primary: '', narrativeArc: '', hook: '', proof: '', humorAllowed: false as boolean }
+        const { arc: _arc2, ...toneUpdates } = parsed.updatedFields?.tone ?? {}
+        return {
+          primary: '',
+          narrativeArc: '',
+          hook: '',
+          proof: '',
+          humorAllowed: false,
+          ...toneBase,
+          ...toneUpdates,
+          arc: {
+            opening: '',
+            middle: '',
+            closing: '',
+            ...(safeCtx.tone?.arc ?? {}),
+            ...(parsed.updatedFields?.tone?.arc ?? {}),
+          },
+        }
+      })(),
       constraints: {
         avoidTopics: [],
         mandatoryTopics: [],
@@ -557,8 +563,8 @@ router.post('/analyze-source', async (req: Request, res: Response): Promise<void
         res.status(400).json({ success: false, error: 'Formato de imagen inválido' })
         return
       }
-      const mediaType = base64Match[1] as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
-      const base64Data = base64Match[2]
+      const mediaType = base64Match[1]! as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+      const base64Data = base64Match[2]!
 
       const response = await anthropic.messages.create({
         model: 'claude-opus-4-5',
@@ -585,7 +591,8 @@ Responde en español, en 3-5 oraciones concisas. Sé específico sobre el conten
         ],
       })
 
-      const description = response.content[0]?.type === 'text' ? response.content[0].text : ''
+      const firstImageBlock = response.content[0]
+      const description = firstImageBlock?.type === 'text' ? (firstImageBlock as TextBlock).text : ''
       res.json({ success: true, description })
       return
     }

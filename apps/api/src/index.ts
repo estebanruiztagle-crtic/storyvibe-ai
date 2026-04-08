@@ -3,7 +3,6 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 
 import path from 'path'
-import { fileURLToPath } from 'url'
 import { healthRouter } from './routes/health'
 import { zone1Router } from './routes/zones/zone1'
 import { zone2Router } from './routes/zones/zone2'
@@ -13,8 +12,6 @@ import zone5Router from './routes/zones/zone5'
 import { act3Router } from './routes/act3'
 
 // Load .env from the api package root regardless of where the process was started
-const __filename = fileURLToPath(import.meta.url)
-const __dirname  = path.dirname(__filename)
 const dotenvPath = path.resolve(__dirname, '../.env')
 dotenv.config({ path: dotenvPath, override: true })
 
