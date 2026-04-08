@@ -18,9 +18,21 @@ dotenv.config({ path: dotenvPath, override: true })
 const app = express()
 const PORT = process.env['PORT'] ?? 3001
 
+// Support comma-separated list of allowed origins via ALLOWED_ORIGINS env var
+// e.g. ALLOWED_ORIGINS=https://storyvibe.vercel.app,http://localhost:3000
+const rawOrigins = process.env['ALLOWED_ORIGINS'] ?? process.env['FRONTEND_URL'] ?? 'http://localhost:3000'
+const allowedOrigins = rawOrigins.split(',').map((o) => o.trim()).filter(Boolean)
+
 app.use(
   cors({
-    origin: process.env['FRONTEND_URL'] ?? 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. server-to-server, curl)
+      if (!origin) return callback(null, true)
+      if (allowedOrigins.includes(origin)) return callback(null, true)
+      // Allow any vercel.app preview deployment
+      if (origin.endsWith('.vercel.app')) return callback(null, true)
+      callback(new Error(`CORS: origin not allowed — ${origin}`))
+    },
     credentials: true,
   })
 )

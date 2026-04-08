@@ -64,7 +64,7 @@ Responde ÚNICAMENTE con JSON válido en este formato:
 
   try {
     const message = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1500,
       messages: [
         {
@@ -228,7 +228,7 @@ Cierre: ${(zone1Context.tone as Record<string,Record<string,string>>)?.arc?.clos
       : ''
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4000,
       system: GENERATE_PITCH_SYSTEM,
       messages: [

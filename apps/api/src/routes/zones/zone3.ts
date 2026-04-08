@@ -35,7 +35,7 @@ router.post('/generate-palette', async (req: Request, res: Response) => {
     }
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1500,
       system: `Eres un director de arte especializado en presentaciones corporativas de alto impacto.
 Dado el contexto de la presentación (sector, audiencia, tono de marca) y su arquitectura narrativa (framework elegido, arco emocional, tópicos), genera una paleta de colores profesional, cohesiva y estratégica.
@@ -115,7 +115,7 @@ router.post('/suggest-graphics', async (req: Request, res: Response) => {
     }
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 3000,
       system: `Eres un diseñador experto en presentaciones corporativas y visualización de datos.
 Para cada lámina de una presentación, sugiere el tipo de gráfico o infografía más efectivo para comunicar su concepto, considerando el tipo emocional y la intensidad.

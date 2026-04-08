@@ -147,7 +147,7 @@ router.post('/generate-slides', async (req: Request, res: Response): Promise<voi
       : ''
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-opus-4-5',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 8000,
       system: GENERATE_SLIDES_PROMPT,
       messages: [
