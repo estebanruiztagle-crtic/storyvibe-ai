@@ -248,7 +248,7 @@ router.post('/diagnose', async (req: Request, res: Response) => {
     }
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 1500,
       system: ZONE1_SYSTEM_PROMPT,
       messages,
@@ -543,7 +543,7 @@ router.post('/analyze-source', async (req: Request, res: Response): Promise<void
       const base64Data = base64Match[2]!
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 600,
         messages: [
           {

@@ -234,7 +234,7 @@ CURRENT SLIDE STATE:
 Please evaluate this slide across all 3 axes and generate concrete suggestions for improvement. Focus on actionable, specific feedback appropriate for the slide's emotional role (${slideReview.type}) and intensity (${slideReview.intensity}/10).`
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-sonnet-4-5-20250929',
       max_tokens: 2000,
       system: SYSTEM_PROMPT,
       messages: [
