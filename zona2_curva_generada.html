@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Framework → Curva Emocional</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f8f8f6;color:#1a1a1a;padding:1.5rem 1rem}
+.wrap{display:flex;flex-direction:column;gap:1.25rem;max-width:900px;margin:0 auto}
+.top-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.z-title{font-size:15px;font-weight:500}
+.z-meta{font-size:12px;color:#666;margin-top:2px}
+.section-label{font-size:10px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.card{background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden}
+.card-header{padding:11px 14px;border-bottom:0.5px solid #e0e0e0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.card-title{font-size:12px;font-weight:500}
+.card-body{padding:14px}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:8px;display:inline-block}
+.b-blue{background:#E6F1FB;color:#0C447C}
+.b-teal{background:#E1F5EE;color:#085041}
+.b-amber{background:#FAEEDA;color:#633806}
+.b-purple{background:#EEEDFE;color:#3C3489}
+.b-gray{background:#F1EFE8;color:#444441}
+.b-coral{background:#FAECE7;color:#712B13}
+.divider{height:0.5px;background:#e0e0e0;margin:12px 0}
+
+.fw-banner{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;flex-wrap:wrap;gap:10px}
+.fw-name{font-size:14px;font-weight:500}
+.fw-origin{font-size:11px;color:#999;margin-top:2px}
+.fw-arc{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px}
+.arc-pill{font-size:10px;padding:2px 8px;background:#f4f4f2;border-radius:8px;color:#666}
+.arc-arr{font-size:10px;color:#ccc}
+
+.mapping-grid{display:flex;flex-direction:column;gap:0}
+.mapping-row{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:0;padding:8px 0;border-bottom:0.5px solid #f0f0f0}
+.mapping-row:last-child{border-bottom:none}
+.mapping-topic{font-size:12px;font-weight:500;padding:6px 10px;border-radius:8px;background:#f4f4f2}
+.mapping-topic .topic-type{font-size:10px;color:#999;margin-top:2px;font-weight:400}
+.mapping-arrow{text-align:center;color:#ccc;font-size:14px}
+.mapping-result{display:flex;flex-direction:column;gap:3px;padding-left:8px}
+.mapping-emotion{font-size:12px;font-weight:500}
+.mapping-type{font-size:10px}
+.mapping-rules{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+.rule-chip{font-size:9px;padding:1px 6px;border-radius:6px;background:#eee;color:#666}
+
+.curve-wrap{position:relative;width:100%}
+.curve-canvas{width:100%;height:220px;display:block}
+.slides-row{display:flex;border-top:0.5px solid #e0e0e0}
+.slide-col{flex:1;padding:8px 4px;border-right:0.5px solid #e0e0e0;cursor:pointer;transition:background 0.15s}
+.slide-col:last-child{border-right:none}
+.slide-col:hover{background:#f4f4f2}
+.slide-col.active{background:#f0f0f0}
+.slide-num{font-size:9px;color:#999;text-align:center;margin-bottom:3px}
+.slide-pill{font-size:8px;font-weight:500;text-align:center;padding:2px 3px;border-radius:4px;margin-bottom:2px}
+.pill-peak{background:#E1F5EE;color:#085041}
+.pill-valley{background:#E6F1FB;color:#0C447C}
+.pill-transition{background:#FAEEDA;color:#633806}
+.slide-emotion{font-size:8px;color:#999;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.editor-panel{background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden}
+.editor-header{padding:11px 14px;border-bottom:0.5px solid #e0e0e0;display:flex;align-items:center;gap:10px}
+.editor-slide-badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:8px;background:#f4f4f2;color:#666}
+.editor-label{font-size:14px;font-weight:500}
+.editor-body{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.editor-block{padding:14px 16px;border-right:0.5px solid #e0e0e0}
+.editor-block:last-child{border-right:none}
+.editor-block-title{font-size:10px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+.field-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px}
+.field-key{color:#666}
+.field-val{font-weight:500}
+.type-btns{display:flex;gap:5px;margin-top:4px}
+.type-btn{font-size:11px;padding:4px 10px;border-radius:8px;border:0.5px solid #e0e0e0;background:transparent;cursor:pointer;color:#666}
+.type-btn.active-peak{background:#E1F5EE;color:#085041;border-color:#9FE1CB}
+.type-btn.active-valley{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4}
+.type-btn.active-transition{background:#FAEEDA;color:#633806;border-color:#FAC775}
+.intensity-wrap{margin-top:8px}
+.intensity-label{font-size:11px;color:#666;margin-bottom:4px;display:flex;justify-content:space-between}
+.intensity-slider{width:100%;margin-top:2px}
+.emotion-select{width:100%;font-size:12px;padding:6px 8px;border:0.5px solid #e0e0e0;border-radius:8px;background:#fff;color:#1a1a1a;margin-top:4px}
+.system-note{margin-top:8px;padding:8px 10px;background:#f4f4f2;border-radius:8px;font-size:11px;color:#666;border-left:2px solid #9FE1CB}
+.system-note-tag{font-size:10px;font-weight:500;color:#0F6E56;margin-bottom:2px}
+.ask-btn{font-size:11px;padding:5px 12px;border-radius:8px;border:0.5px solid #ccc;background:transparent;color:#666;cursor:pointer;margin-top:8px}
+.ask-btn:hover{background:#f4f4f2}
+
+.alert-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:0.5px solid #e0e0e0;border-left:3px solid #EF9F27;border-radius:8px;font-size:12px;color:#666}
+.alert-dot{width:8px;height:8px;border-radius:50%;background:#EF9F27;flex-shrink:0}
+
+.metrics-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.metric-card{background:#f4f4f2;border-radius:8px;padding:10px 12px}
+.metric-label{font-size:10px;color:#999;margin-bottom:3px}
+.metric-val{font-size:20px;font-weight:500}
+
+.generate-btn{width:100%;padding:10px;font-size:13px;font-weight:500;border-radius:8px;border:none;background:#1a1a2e;color:#fff;cursor:pointer;transition:opacity 0.15s}
+.generate-btn:hover{opacity:0.85}
+.generate-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+.step{display:none;flex-direction:column;gap:1.25rem}
+.step.active{display:flex}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-row">
+    <div>
+      <div class="z-title">framework → curva emocional</div>
+      <div class="z-meta">generación automática + ajuste manual</div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:11px;color:#999" id="stepLabel">paso 1 de 3</span>
+    </div>
+  </div>
+
+  <div id="step1" class="step active">
+    <div class="section-label">framework seleccionado en 2B</div>
+    <div class="fw-banner">
+      <div>
+        <div class="fw-name">problema — solución — visión</div>
+        <div class="fw-origin">McKee / Duarte · fit score 9.2</div>
+        <div class="fw-arc">
+          <span class="arc-pill">curiosidad</span><span class="arc-arr">→</span>
+          <span class="arc-pill">tensión</span><span class="arc-arr">→</span>
+          <span class="arc-pill">alivio</span><span class="arc-arr">→</span>
+          <span class="arc-pill">excitación</span><span class="arc-arr">→</span>
+          <span class="arc-pill">confianza</span>
+        </div>
+      </div>
+      <span class="badge b-teal">recomendado</span>
+    </div>
+
+    <div>
+      <div class="section-label">mapeo automático: tópicos → puntos de curva</div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">reglas de conversión aplicadas</span>
+          <div style="display:flex;gap:6px">
+            <span class="badge b-blue">tipo de tópico → tipo emocional</span>
+            <span class="badge b-purple">posición en arco → intensidad</span>
+            <span class="badge b-amber">audiencia escéptica → calibración</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mapping-grid" id="mappingGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="generate-btn" onclick="goToStep(2)">generar curva emocional →</button>
+  </div>
+
+  <div id="step2" class="step">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="section-label">curva emocional generada</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:11px;color:#999">haz clic en un punto para ajustar</span>
+        <button class="ask-btn" onclick="goToStep(1)">← volver</button>
+      </div>
+    </div>
+
+    <div class="metrics-row" id="metricsRow"></div>
+
+    <div id="alertBar" style="display:none" class="alert-bar">
+      <div class="alert-dot"></div>
+      <span id="alertText"></span>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">intensidad emocional por slide</span>
+        <div style="display:flex;gap:12px;font-size:11px;color:#666;align-items:center">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#1D9E75;display:inline-block"></span>pico</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#378ADD;display:inline-block"></span>valle</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#EF9F27;display:inline-block"></span>transición</span>
+        </div>
+      </div>
+      <div style="padding:16px 16px 0">
+        <div class="curve-wrap">
+          <canvas class="curve-canvas" id="curveCanvas"></canvas>
+        </div>
+      </div>
+      <div class="slides-row" id="slidesRow"></div>
+    </div>
+
+    <div class="editor-panel" id="editorPanel"></div>
+
+    <button class="generate-btn" id="approveBtn" onclick="goToStep(3)">aprobar curva → continuar a zona 3</button>
+  </div>
+
+  <div id="step3" class="step">
+    <div class="card">
+      <div class="card-body" style="text-align:center;padding:2rem">
+        <div style="font-size:14px;font-weight:500;margin-bottom:6px">curva emocional aprobada</div>
+        <div style="font-size:12px;color:#666;margin-bottom:1.5rem">la estructura narrativa queda bloqueada — los agentes de assets y diseño pueden comenzar</div>
+        <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
+          <button class="ask-btn" onclick="goToStep(2)">← volver a ajustar</button>
+          <button class="generate-btn" style="width:auto;padding:8px 24px">continuar a zona 3 — assets →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const typeColors = {peak:'#1D9E75',valley:'#378ADD',transition:'#EF9F27'};
+const typeLabel = {peak:'pico',valley:'valle',transition:'transición'};
+const typePill = {peak:'pill-peak',valley:'pill-valley',transition:'pill-transition'};
+
+const mappings = [
+  {topic:'brecha de inclusión financiera LATAM',topicType:'problema_contexto',
+   type:'peak',emotion:'curiosidad',intensity:7,
+   rules:['problema_contexto → pico apertura','posición 1 en arco → intensidad alta','gancho framework']},
+  {topic:'tamaño de mercado $150B',topicType:'dato_duro',
+   type:'valley',emotion:'atención fría',intensity:4,
+   rules:['dato_duro → valle','audiencia escéptica → intensidad moderada','calibración zona 1']},
+  {topic:'solución propuesta',topicType:'propuesta_valor',
+   type:'transition',emotion:'esperanza',intensity:6,
+   rules:['propuesta_valor → transición','posición central en arco','puente valle→pico']},
+  {topic:'caso cliente Banco X',topicType:'prueba_social',
+   type:'peak',emotion:'confianza emergente',intensity:8,
+   rules:['prueba_social → pico','patrón autor: siempre pico','posición 4 en arco']},
+  {topic:'tracción ARR $2.1M',topicType:'dato_duro',
+   type:'valley',emotion:'análisis',intensity:5,
+   rules:['dato_duro → valle','obligatorio','intensidad +1 vs baseline escéptico — dato propio']},
+  {topic:'roadmap 18 meses',topicType:'visión',
+   type:'peak',emotion:'excitación',intensity:9,
+   rules:['visión → pico máximo','posición cierre en arco','emoción objetivo zona 1']},
+];
+
+const topicBadge = {
+  'problema_contexto':'b-blue','dato_duro':'b-gray','propuesta_valor':'b-purple',
+  'prueba_social':'b-teal','visión':'b-amber','contexto_mercado':'b-coral'
+};
+
+const mappingGrid = document.getElementById('mappingGrid');
+mappings.forEach(m => {
+  const row = document.createElement('div');
+  row.className = 'mapping-row';
+  row.innerHTML = `
+    <div class="mapping-topic">
+      ${m.topic}
+      <div class="topic-type">${m.topicType.replace(/_/g,' ')}</div>
+    </div>
+    <div class="mapping-arrow">→</div>
+    <div class="mapping-result">
+      <div class="mapping-emotion" style="color:${typeColors[m.type]}">${m.emotion}</div>
+      <div class="mapping-type" style="color:${typeColors[m.type]}">${typeLabel[m.type]} · intensidad ${m.intensity}</div>
+      <div class="mapping-rules">
+        ${m.rules.map(r=>`<span class="rule-chip">${r}</span>`).join('')}
+      </div>
+    </div>`;
+  mappingGrid.appendChild(row);
+});
+
+const points = mappings.map((m,i) => ({
+  slide: i+1,
+  label: m.topic.length > 22 ? m.topic.slice(0,22)+'…' : m.topic,
+  fullLabel: m.topic,
+  type: m.type,
+  emotion: m.emotion,
+  intensity: m.intensity,
+  topicType: m.topicType,
+  systemIntensity: m.intensity,
+  systemEmotion: m.emotion,
+  systemType: m.type,
+  modified: false,
+}));
+
+const emotions = {
+  peak: ['curiosidad','excitación','confianza emergente','alegría','orgullo','asombro'],
+  valley: ['atención fría','análisis','incomodidad','tensión','escepticismo'],
+  transition: ['esperanza','alivio','reflexión','anticipación'],
+};
+
+let activeSlide = 0;
+let curveChart = null;
+
+function goToStep(n) {
+  document.querySelectorAll('.step').forEach((s,i) => s.classList.toggle('active', i===n-1));
+  document.getElementById('stepLabel').textContent = `paso ${n} de 3`;
+  if(n===2) { renderStep2(); }
+}
+
+function renderStep2() {
+  buildChart();
+  renderSlides();
+  renderEditor(0);
+  updateMetrics();
+}
+
+function buildChart() {
+  const canvas = document.getElementById('curveCanvas');
+  if(curveChart) { curveChart.destroy(); }
+
+  curveChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: points.map(p => `S${p.slide}`),
+      datasets: [
+        {
+          data: points.map(p => p.intensity),
+          borderColor: points.map(p => typeColors[p.type]),
+          backgroundColor: 'transparent',
+          pointBackgroundColor: points.map(p => p.modified ? '#1a1a2e' : typeColors[p.type]),
+          pointRadius: 7,
+          pointHoverRadius: 9,
+          tension: 0.4,
+          borderWidth: 2,
+          segment: { borderColor: ctx => typeColors[points[ctx.p0DataIndex].type] }
+        },
+        {
+          data: points.map((p,i) => i===activeSlide ? p.intensity : null),
+          pointBackgroundColor: '#fff',
+          pointBorderColor: typeColors[points[activeSlide].type],
+          pointBorderWidth: 2,
+          pointRadius: 11,
+          showLine: false,
+          backgroundColor: 'transparent',
+          borderColor: 'transparent',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => `Slide ${points[items[0].dataIndex].slide}`,
+            label: items => `${points[items[0].dataIndex].emotion} · ${items[0].raw}/10`
+          }
+        }
+      },
+      scales: {
+        y: { min:0, max:10, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ font:{size:11}, color:'#999', stepSize:2 } },
+        x: { grid:{ display:false }, ticks:{ font:{size:11}, color:'#999' } }
+      },
+      onClick: (e, els) => {
+        if(els.length > 0 && els[0].datasetIndex === 0) {
+          activeSlide = els[0].index;
+          updateSelection();
+        }
+      }
+    }
+  });
+}
+
+function updateSelection() {
+  document.querySelectorAll('.slide-col').forEach((c,i) => c.classList.toggle('active', i===activeSlide));
+  curveChart.data.datasets[1].data = points.map((p,i) => i===activeSlide ? p.intensity : null);
+  curveChart.data.datasets[1].pointBorderColor = [typeColors[points[activeSlide].type]];
+  curveChart.update('none');
+  renderEditor(activeSlide);
+}
+
+function renderSlides() {
+  const row = document.getElementById('slidesRow');
+  row.innerHTML = '';
+  points.forEach((p,i) => {
+    const col = document.createElement('div');
+    col.className = 'slide-col' + (i===0?' active':'');
+    col.innerHTML = `
+      <div class="slide-num">${p.slide}</div>
+      <div class="slide-pill ${typePill[p.type]}">${typeLabel[p.type]}</div>
+      <div class="slide-emotion">${p.emotion}</div>
+      ${p.modified?'<div style="font-size:8px;text-align:center;color:#854F0B;margin-top:2px">editado</div>':''}`;
+    col.addEventListener('click', () => { activeSlide=i; updateSelection(); });
+    row.appendChild(col);
+  });
+}
+
+function renderEditor(i) {
+  const p = points[i];
+  const pct = Math.round((p.intensity/10)*100);
+  const panel = document.getElementById('editorPanel');
+  panel.innerHTML = `
+    <div class="editor-header">
+      <span class="editor-slide-badge">slide ${p.slide}</span>
+      <span class="editor-label">${p.fullLabel}</span>
+      ${p.modified?'<span class="badge b-amber" style="margin-left:auto">modificado</span>':''}
+    </div>
+    <div class="editor-body">
+      <div class="editor-block">
+        <div class="editor-block-title">tipo y emoción</div>
+        <div style="font-size:11px;color:#999;margin-bottom:6px">tipo de punto</div>
+        <div class="type-btns">
+          <button class="type-btn ${p.type==='peak'?'active-peak':''}" onclick="setType(${i},'peak')">pico</button>
+          <button class="type-btn ${p.type==='valley'?'active-valley':''}" onclick="setType(${i},'valley')">valle</button>
+          <button class="type-btn ${p.type==='transition'?'active-transition':''}" onclick="setType(${i},'transition')">transición</button>
+        </div>
+        <div style="font-size:11px;color:#999;margin-top:10px;margin-bottom:4px">emoción objetivo</div>
+        <select class="emotion-select" onchange="setEmotion(${i}, this.value)">
+          ${[...emotions[p.type]].map(e => `<option value="${e}" ${e===p.emotion?'selected':''}>${e}</option>`).join('')}
+        </select>
+        ${p.modified ? `
+        <div class="system-note" style="margin-top:8px">
+          <div class="system-note-tag">original del sistema</div>
+          ${p.systemType} · ${p.systemEmotion} · intensidad ${p.systemIntensity}
+          <br><button class="ask-btn" style="margin-top:4px;font-size:10px" onclick="resetPoint(${i})">restaurar original</button>
+        </div>` : `
+        <div class="system-note" style="margin-top:8px">
+          <div class="system-note-tag">generado por sistema</div>
+          basado en: tipo de tópico + posición en arco + audiencia escéptica (zona 1)
+        </div>`}
+      </div>
+      <div class="editor-block">
+        <div class="editor-block-title">intensidad</div>
+        <div class="intensity-wrap">
+          <div class="intensity-label">
+            <span>nivel de intensidad emocional</span>
+            <span style="font-weight:500;color:${typeColors[p.type]}" id="intVal">${p.intensity}/10</span>
+          </div>
+          <input type="range" class="intensity-slider" min="1" max="10" step="1" value="${p.intensity}"
+            oninput="setIntensity(${i}, parseInt(this.value))">
+        </div>
+        <div style="margin-top:16px">
+          <div class="editor-block-title" style="margin-bottom:8px">métricas del punto</div>
+          <div class="field-row"><span class="field-key">duración estimada</span><span class="field-val">2–3 min</span></div>
+          <div class="field-row"><span class="field-key">carga cognitiva</span><span class="field-val">${p.type==='valley'?'media–alta':'baja'}</span></div>
+          <div class="field-row"><span class="field-key">recurso sugerido</span><span class="field-val">${
+            p.topicType==='dato_duro'?'dato + visualización':
+            p.topicType==='prueba_social'?'historia real':
+            p.topicType==='visión'?'imagen evocadora':
+            p.topicType==='propuesta_valor'?'demo o analogía':'narrativa'
+          }</span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function setType(i, type) {
+  points[i].type = type;
+  points[i].emotion = emotions[type][0];
+  points[i].modified = true;
+  refresh(i);
+}
+
+function setEmotion(i, val) {
+  points[i].emotion = val;
+  points[i].modified = true;
+  refresh(i);
+}
+
+function setIntensity(i, val) {
+  points[i].intensity = val;
+  points[i].modified = true;
+  document.getElementById('intVal').textContent = val+'/10';
+  curveChart.data.datasets[0].data = points.map(p => p.intensity);
+  curveChart.data.datasets[0].pointBackgroundColor = points.map(p => p.modified?'#1a1a2e':typeColors[p.type]);
+  curveChart.data.datasets[1].data = points.map((p,j) => j===i ? p.intensity : null);
+  curveChart.update('none');
+  updateMetrics();
+}
+
+function resetPoint(i) {
+  points[i].type = points[i].systemType;
+  points[i].emotion = points[i].systemEmotion;
+  points[i].intensity = points[i].systemIntensity;
+  points[i].modified = false;
+  refresh(i);
+}
+
+function refresh(i) {
+  curveChart.data.datasets[0].data = points.map(p => p.intensity);
+  curveChart.data.datasets[0].borderColor = points.map(p => typeColors[p.type]);
+  curveChart.data.datasets[0].pointBackgroundColor = points.map(p => p.modified?'#1a1a2e':typeColors[p.type]);
+  curveChart.data.datasets[1].data = points.map((p,j) => j===i ? p.intensity : null);
+  curveChart.data.datasets[1].pointBorderColor = [typeColors[points[i].type]];
+  curveChart.update('none');
+  renderSlides();
+  renderEditor(i);
+  updateMetrics();
+  document.querySelectorAll('.slide-col').forEach((c,j) => c.classList.toggle('active', j===i));
+}
+
+function updateMetrics() {
+  const peaks = points.filter(p=>p.type==='peak');
+  const valleys = points.filter(p=>p.type==='valley');
+  const avgInt = (points.reduce((a,p)=>a+p.intensity,0)/points.length).toFixed(1);
+  let maxConsecValleys = 0, cur = 0;
+  points.forEach(p => { if(p.type==='valley'){cur++;maxConsecValleys=Math.max(maxConsecValleys,cur);}else{cur=0;} });
+  document.getElementById('metricsRow').innerHTML = `
+    <div class="metric-card"><div class="metric-label">picos</div><div class="metric-val">${peaks.length}</div></div>
+    <div class="metric-card"><div class="metric-label">valles</div><div class="metric-val">${valleys.length}</div></div>
+    <div class="metric-card"><div class="metric-label">intensidad promedio</div><div class="metric-val">${avgInt}</div></div>
+    <div class="metric-card"><div class="metric-label">valles consecutivos</div><div class="metric-val" style="color:${maxConsecValleys>2?'#E24B4A':'#1a1a1a'}">${maxConsecValleys}</div></div>`;
+  const alertBar = document.getElementById('alertBar');
+  if(maxConsecValleys > 2) {
+    alertBar.style.display='flex';
+    document.getElementById('alertText').textContent = `${maxConsecValleys} valles consecutivos detectados — riesgo de pérdida de atención. Considera insertar un pico o transición.`;
+  } else {
+    alertBar.style.display='none';
+  }
+}
+</script>
+</body>
+</html>

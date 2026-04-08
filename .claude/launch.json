@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["/Users/valentinasolari/StoryVibe AI/start-web.sh"],
+      "port": 3000
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["/Users/valentinasolari/StoryVibe AI/start-api.sh"],
+      "port": 3001
+    }
+  ]
+}

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zona 5 — Storyboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;
+  --surface:#ffffff;
+  --surface2:#f0efe9;
+  --surface3:#e8e6df;
+  --border:#dddbd3;
+  --border2:#c8c5bb;
+  --text:#1c1b18;
+  --text2:#6b6960;
+  --text3:#a8a59b;
+  --pass:#1a7a57;
+  --pass-bg:#e8f5ee;
+  --warn:#8a5a00;
+  --warn-bg:#fdf3dc;
+  --fail:#8a2020;
+  --fail-bg:#fceaea;
+  --pending:#5a5a5a;
+  --pending-bg:#eeeeec;
+  --peak:#1D9E75;
+  --valley:#378ADD;
+  --trans:#EF9F27;
+  --mono:'Syne Mono',monospace;
+  --sans:'Syne',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+.topbar{background:var(--surface);border-bottom:0.5px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:16px}
+.tb-left{display:flex;align-items:center;gap:12px}
+.zone-tag{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text3);font-family:var(--mono)}
+.zone-name{font-size:14px;font-weight:600;color:var(--text)}
+.tb-center{display:flex;align-items:center;gap:20px;flex:1;justify-content:center}
+.time-block{display:flex;align-items:center;gap:10px}
+.time-label{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.time-bar-wrap{width:200px;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.time-bar-fill{height:100%;border-radius:3px;transition:width 0.4s}
+.time-val{font-size:12px;font-weight:500;font-family:var(--mono)}
+.time-ok{color:var(--pass)}
+.time-warn{color:var(--warn)}
+.time-fail{color:var(--fail)}
+.tb-right{display:flex;align-items:center;gap:8px}
+.export-btn{padding:6px 14px;border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;border:0.5px solid var(--border2);background:transparent;color:var(--text2);transition:all 0.15s}
+.export-btn:hover{background:var(--surface2)}
+.export-btn.blocked{opacity:0.4;cursor:not-allowed}
+.export-btn.ready{background:var(--text);color:#fff;border-color:var(--text)}
+.export-btn.ready:hover{opacity:0.85}
+
+.readiness-bar{background:var(--surface);border-bottom:0.5px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.rb-item{display:flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono)}
+.rb-dot{width:8px;height:8px;border-radius:50%}
+.blocking-alert{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:10px;color:var(--fail);font-family:var(--mono)}
+.alert-icon{width:14px;height:14px;border-radius:50%;background:var(--fail-bg);border:0.5px solid var(--fail);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--fail)}
+
+.filmstrip-area{flex:1;overflow-x:auto;overflow-y:hidden;padding:24px 20px;display:flex;align-items:flex-start;gap:16px}
+.filmstrip-area::-webkit-scrollbar{height:4px}
+.filmstrip-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.slide-card{flex-shrink:0;width:220px;display:flex;flex-direction:column;gap:0;cursor:pointer;transition:transform 0.15s}
+.slide-card:hover{transform:translateY(-2px)}
+.slide-card.active .card-thumb-wrap{border-color:var(--text)}
+
+.card-thumb-wrap{border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);transition:border-color 0.15s}
+.card-thumb{width:100%;aspect-ratio:16/9;position:relative;display:flex;align-items:flex-end;overflow:hidden}
+.thumb-bg{position:absolute;inset:0}
+.thumb-content{position:relative;z-index:1;padding:10px;width:100%}
+.thumb-headline{font-size:8px;font-weight:600;color:rgba(255,255,255,0.9);line-height:1.3;margin-bottom:3px}
+.thumb-body{font-size:6px;color:rgba(255,255,255,0.55);line-height:1.4;font-family:var(--mono)}
+.thumb-stat{font-size:20px;font-weight:600;color:rgba(255,255,255,0.95);line-height:1;margin-bottom:2px}
+.thumb-video-badge{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.5);border-radius:3px;padding:2px 5px;font-size:7px;color:rgba(255,255,255,0.8);font-family:var(--mono)}
+.thumb-pending{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:rgba(255,255,255,0.25);font-family:var(--mono)}
+
+.card-status-strip{display:flex;gap:0;border-left:1.5px solid var(--border);border-right:1.5px solid var(--border)}
+.status-cell{flex:1;height:20px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:500;font-family:var(--mono);border-right:0.5px solid var(--border)}
+.status-cell:last-child{border-right:none}
+.sc-pass{background:var(--pass-bg);color:var(--pass)}
+.sc-warn{background:var(--warn-bg);color:var(--warn)}
+.sc-fail{background:var(--fail-bg);color:var(--fail)}
+.sc-pending{background:var(--pending-bg);color:var(--pending)}
+
+.card-meta{padding:8px 10px;border:1.5px solid var(--border);border-top:none;border-radius:0 0 8px 8px;background:var(--surface);display:flex;flex-direction:column;gap:5px}
+.card-top{display:flex;align-items:center;justify-content:space-between}
+.card-num{font-size:9px;color:var(--text3);font-family:var(--mono)}
+.card-label{font-size:11px;font-weight:500;color:var(--text)}
+.card-topic{font-size:9px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-bottom{display:flex;align-items:center;justify-content:space-between}
+.curve-pip{display:flex;align-items:center;gap:4px}
+.pip-dot{width:7px;height:7px;border-radius:50%}
+.pip-emotion{font-size:9px;color:var(--text2);font-family:var(--mono)}
+.time-chip{font-size:9px;color:var(--text3);font-family:var(--mono);background:var(--surface2);padding:2px 6px;border-radius:3px}
+
+.curve-strip{flex-shrink:0;padding:0 20px 24px;background:var(--bg)}
+.curve-wrap{background:var(--surface);border:0.5px solid var(--border);border-radius:8px;padding:12px 16px}
+.curve-label{font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px}
+
+.detail-panel{background:var(--surface);border-top:0.5px solid var(--border);padding:14px 20px;flex-shrink:0;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:start}
+.detail-col{display:flex;flex-direction:column;gap:4px}
+.d-label{font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:2px}
+.d-val{font-size:12px;font-weight:500;color:var(--text)}
+.d-sub{font-size:10px;color:var(--text2)}
+.sug-list{display:flex;flex-direction:column;gap:3px}
+.sug-item{font-size:9px;color:var(--text2);display:flex;align-items:center;gap:4px;font-family:var(--mono)}
+.sug-sev{font-size:8px;padding:1px 5px;border-radius:3px;flex-shrink:0}
+.ss-high{background:var(--fail-bg);color:var(--fail)}
+.ss-medium{background:var(--warn-bg);color:var(--warn)}
+.pending-badge{font-size:9px;padding:2px 7px;border-radius:3px;font-family:var(--mono);display:inline-block}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <span class="zone-tag">zona 5</span>
+    <span class="zone-name">storyboard</span>
+  </div>
+  <div class="tb-center">
+    <div class="time-block">
+      <span class="time-label">tiempo estimado</span>
+      <div class="time-bar-wrap">
+        <div class="time-bar-fill" id="timeBar" style="width:92%;background:var(--pass)"></div>
+      </div>
+      <span class="time-val time-ok" id="timeVal">18:30 / 20:00</span>
+    </div>
+    <div style="font-size:10px;color:var(--text3);font-family:var(--mono)" id="timeStatus">1:30 de margen</div>
+  </div>
+  <div class="tb-right">
+    <button class="export-btn" id="fallbackBtn" onclick="activateFallback()">versión 15 min</button>
+    <button class="export-btn blocked" id="exportBtn">exportar a canva</button>
+  </div>
+</div>
+
+<div class="readiness-bar">
+  <div class="rb-item"><div class="rb-dot" style="background:var(--pass)"></div><span id="cntPass">1 listo</span></div>
+  <div class="rb-item"><div class="rb-dot" style="background:var(--warn)"></div><span id="cntWarn">2 alerta</span></div>
+  <div class="rb-item"><div class="rb-dot" style="background:var(--fail)"></div><span id="cntFail">1 fallo</span></div>
+  <div class="rb-item"><div class="rb-dot" style="background:var(--pending)"></div><span id="cntPend">2 pendiente</span></div>
+  <div class="blocking-alert" id="blockingAlert">
+    <div class="alert-icon">!</div>
+    exportación bloqueada — slide 4 tiene issues críticos sin resolver
+  </div>
+</div>
+
+<div class="filmstrip-area" id="filmstrip"></div>
+
+<div class="detail-panel" id="detailPanel"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const typeColors={peak:'#1D9E75',valley:'#378ADD',transition:'#EF9F27'};
+const typeLabel={peak:'pico',valley:'valle',transition:'transición'};
+const statusColors={pass:'var(--pass)',warning:'var(--warn)',fail:'var(--fail)',pending:'var(--pending)'};
+const scClass={pass:'sc-pass',warning:'sc-warn',fail:'sc-fail',pending:'sc-pending'};
+
+const slides=[
+  {n:1,label:'apertura',topic:'brecha de inclusión financiera LATAM',
+   type:'peak',emotion:'curiosidad',intensity:7,
+   seconds:60,pacing:'lento',notes:80,
+   content:'pregunta retórica + dato sorpresivo',
+   assetType:'image',assetScore:9.2,
+   z4Score:8.6,z4Status:'warning',pendingSugs:[{sev:'medium',text:'reducir palabras a 15'}],
+   overall:'warning',
+   bg:'linear-gradient(160deg,#1a1208 0%,#3d2b0f 100%)',
+   mockType:'image'},
+  {n:2,label:'problema',topic:'tamaño de mercado $150B',
+   type:'valley',emotion:'atención fría',intensity:4,
+   seconds:120,pacing:'medio',notes:160,
+   content:'dato duro + visualización única',
+   assetType:'image',assetScore:9.5,
+   z4Score:9.1,z4Status:'pass',pendingSugs:[],
+   overall:'pass',
+   bg:'linear-gradient(160deg,#0d1420 0%,#1a1a2e 100%)',
+   mockType:'stat'},
+  {n:3,label:'agravante',topic:'solución propuesta',
+   type:'transition',emotion:'esperanza',intensity:6,
+   seconds:150,pacing:'medio',notes:200,
+   content:'analogía + demo visual',
+   assetType:'image',assetScore:9.4,
+   z4Score:8.2,z4Status:'warning',pendingSugs:[{sev:'medium',text:'tipografía body'},{sev:'medium',text:'reducir palabras'}],
+   overall:'warning',
+   bg:'linear-gradient(160deg,#0f2015 0%,#1a2e1a 100%)',
+   mockType:'split'},
+  {n:4,label:'caso cliente',topic:'caso cliente Banco X',
+   type:'peak',emotion:'confianza emergente',intensity:8,
+   seconds:270,pacing:'medio',notes:360,
+   content:'historia Banco X + NPS 72',
+   assetType:'video',assetScore:10,
+   z4Score:6.5,z4Status:'fail',pendingSugs:[{sev:'high',text:'color fondo bloque'},{sev:'high',text:'densidad texto 31 palabras'}],
+   overall:'fail',
+   bg:'linear-gradient(160deg,#1a1010 0%,#2d1515 100%)',
+   mockType:'fail'},
+  {n:5,label:'tracción',topic:'tracción ARR $2.1M',
+   type:'valley',emotion:'análisis',intensity:5,
+   seconds:240,pacing:'lento',notes:320,
+   content:'ARR, MoM growth, churn',
+   assetType:'image',assetScore:9.1,
+   z4Score:null,z4Status:'pending',pendingSugs:[],
+   overall:'pending',
+   bg:'linear-gradient(160deg,#101420 0%,#1a1a2e 100%)',
+   mockType:'pending'},
+  {n:6,label:'visión',topic:'roadmap 18 meses',
+   type:'peak',emotion:'excitación',intensity:9,
+   seconds:270,pacing:'rápido',notes:200,
+   content:'roadmap + llamada a acción',
+   assetType:'video',assetScore:9.5,
+   z4Score:null,z4Status:'pending',pendingSugs:[],
+   overall:'pending',
+   bg:'linear-gradient(160deg,#100a1a 0%,#1a0820 100%)',
+   mockType:'pending'},
+];
+
+let active=0;
+let fallbackMode=false;
+let curveChart=null;
+
+const thumbContent={
+  image:(s)=>`<div class="thumb-content"><div class="thumb-headline">${s.topic}</div><div class="thumb-body">${s.content}</div></div>`,
+  stat:(s)=>`<div class="thumb-content"><div class="thumb-stat">$150B</div><div class="thumb-body">mercado fintech LATAM</div></div>`,
+  split:(s)=>`<div class="thumb-content"><div class="thumb-headline">solución</div><div class="thumb-body">${s.content}</div></div>`,
+  fail:(s)=>`<div class="thumb-content"><div class="thumb-headline">NPS 72 · Churn 1.4%</div><div class="thumb-body">${s.content}</div></div>`,
+  pending:(s)=>`<div class="thumb-pending">pendiente</div>`,
+};
+
+function fmtTime(sec){const m=Math.floor(sec/60),s=sec%60;return `${m}:${s.toString().padStart(2,'0')}`;}
+
+function renderFilmstrip(){
+  const fs=document.getElementById('filmstrip');
+  fs.innerHTML='';
+  const activeSlideset=fallbackMode?slides.filter((_,i)=>i!==2):slides;
+  activeSlideset.forEach((s,i)=>{
+    const realIdx=slides.indexOf(s);
+    const el=document.createElement('div');
+    el.className='slide-card'+(realIdx===active?' active':'');
+    const oc=typeColors[s.type];
+    el.innerHTML=`
+      <div class="card-thumb-wrap">
+        <div class="card-thumb">
+          <div class="thumb-bg" style="background:${s.bg}"></div>
+          ${(thumbContent[s.mockType]||thumbContent.image)(s)}
+          ${s.assetType==='video'?'<div class="thumb-video-badge">▶ video</div>':''}
+        </div>
+        <div class="card-status-strip">
+          <div class="status-cell ${scClass['pass']}">asset</div>
+          <div class="status-cell ${scClass[s.z4Status]}">diseño</div>
+          <div class="status-cell ${scClass[s.overall]}">${s.overall==='pass'?'ok':s.overall==='warning'?'alerta':s.overall==='fail'?'fallo':'...'}</div>
+        </div>
+        <div class="card-meta">
+          <div class="card-top">
+            <span class="card-num">S${s.n}</span>
+            <span class="card-label">${s.label}</span>
+          </div>
+          <div class="card-topic">${s.topic}</div>
+          <div class="card-bottom">
+            <div class="curve-pip">
+              <div class="pip-dot" style="background:${oc}"></div>
+              <span class="pip-emotion">${s.emotion}</span>
+            </div>
+            <span class="time-chip">${fmtTime(s.seconds)}</span>
+          </div>
+        </div>
+      </div>`;
+    el.addEventListener('click',()=>{active=realIdx;render();});
+    fs.appendChild(el);
+  });
+}
+
+function renderDetail(){
+  const s=slides[active];
+  const panel=document.getElementById('detailPanel');
+  panel.innerHTML=`
+    <div class="detail-col">
+      <div class="d-label">slide</div>
+      <div class="d-val">S${s.n} — ${s.label}</div>
+      <div class="d-sub">${s.topic}</div>
+    </div>
+    <div class="detail-col">
+      <div class="d-label">curva emocional</div>
+      <div class="d-val" style="color:${typeColors[s.type]}">${s.emotion}</div>
+      <div class="d-sub">${typeLabel[s.type]} · intensidad ${s.intensity}/10</div>
+    </div>
+    <div class="detail-col">
+      <div class="d-label">tiempo</div>
+      <div class="d-val">${fmtTime(s.seconds)}</div>
+      <div class="d-sub">pacing ${s.pacing} · ${s.notes} palabras guión</div>
+    </div>
+    <div class="detail-col">
+      <div class="d-label">asset</div>
+      <div class="d-val">${s.assetType}</div>
+      <div class="d-sub">brand compliance ${s.assetScore}/10</div>
+    </div>
+    <div class="detail-col">
+      <div class="d-label">zona 4 — diseño</div>
+      ${s.z4Score!==null
+        ?`<div class="d-val" style="color:${statusColors[s.z4Status]}">${s.z4Score}/10</div>`
+        :`<span class="pending-badge" style="background:var(--pending-bg);color:var(--pending)">pendiente</span>`}
+      ${s.pendingSugs.length>0
+        ?`<div class="sug-list">${s.pendingSugs.map(sg=>`<div class="sug-item"><span class="sug-sev ss-${sg.sev}">${sg.sev}</span>${sg.text}</div>`).join('')}</div>`
+        :`<div class="d-sub">${s.z4Status==='pass'?'sin pendientes':''}</div>`}
+    </div>`;
+}
+
+function renderTimeBar(){
+  const activeset=fallbackMode?slides.filter((_,i)=>i!==2):slides;
+  const total=activeset.reduce((a,s)=>a+s.seconds,0);
+  const available=fallbackMode?900:1200;
+  const pct=Math.min((total/available)*100,100);
+  const bar=document.getElementById('timeBar');
+  const val=document.getElementById('timeVal');
+  const status=document.getElementById('timeStatus');
+  const color=pct>=100?'var(--fail)':pct>=95?'var(--warn)':'var(--pass)';
+  bar.style.width=pct+'%';
+  bar.style.background=color;
+  val.textContent=`${fmtTime(total)} / ${fmtTime(available)}`;
+  val.className=`time-val ${pct>=100?'time-fail':pct>=95?'time-warn':'time-ok'}`;
+  const buf=available-total;
+  status.textContent=buf>=0?`${fmtTime(buf)} de margen`:`${fmtTime(Math.abs(buf))} de exceso`;
+  status.style.color=buf<0?'var(--fail)':buf<60?'var(--warn)':'var(--text3)';
+}
+
+function renderCurveInline(){
+  const canvas=document.getElementById('miniCurve');
+  if(!canvas)return;
+  if(curveChart){curveChart.destroy();curveChart=null;}
+  curveChart=new Chart(canvas,{
+    type:'line',
+    data:{
+      labels:slides.map(s=>`S${s.n}`),
+      datasets:[{
+        data:slides.map(s=>s.intensity),
+        borderColor:slides.map(s=>typeColors[s.type]),
+        backgroundColor:'transparent',
+        pointBackgroundColor:slides.map((s,i)=>i===active?'#1c1b18':typeColors[s.type]),
+        pointRadius:slides.map((_,i)=>i===active?6:4),
+        tension:0.4,borderWidth:1.5,
+        segment:{borderColor:ctx=>typeColors[slides[ctx.p0DataIndex].type]}
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{
+        y:{min:0,max:10,display:false},
+        x:{display:false}
+      }
+    }
+  });
+}
+
+function activateFallback(){
+  fallbackMode=!fallbackMode;
+  const btn=document.getElementById('fallbackBtn');
+  btn.textContent=fallbackMode?'versión completa (20 min)':'versión 15 min';
+  btn.style.background=fallbackMode?'var(--text)':'transparent';
+  btn.style.color=fallbackMode?'#fff':'var(--text2)';
+  if(fallbackMode&&active===2)active=0;
+  render();
+}
+
+function render(){
+  renderFilmstrip();
+  renderDetail();
+  renderTimeBar();
+  setTimeout(renderCurveInline,50);
+}
+
+document.getElementById('filmstrip').insertAdjacentHTML('afterend',`
+  <div style="padding:0 20px 12px;flex-shrink:0">
+    <div class="curve-wrap">
+      <div class="curve-label">curva emocional — intensidad por slide</div>
+      <div style="height:60px;position:relative"><canvas id="miniCurve"></canvas></div>
+    </div>
+  </div>`);
+
+render();
+</script>
+</body>
+</html>

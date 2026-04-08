@@ -1,0 +1,303 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.z1{font-family:var(--font-sans);color:var(--color-text-primary);padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1.25rem}
+.top-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.z-title{font-size:15px;font-weight:500}
+.z-meta{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+.confidence-wrap{display:flex;align-items:center;gap:10px}
+.conf-label{font-size:11px;color:var(--color-text-secondary)}
+.conf-bar{width:120px;height:5px;background:var(--color-border-tertiary);border-radius:3px;overflow:hidden}
+.conf-fill{height:100%;border-radius:3px;background:#1D9E75;transition:width 0.4s}
+.conf-val{font-size:12px;font-weight:500;color:#0F6E56}
+.section-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.card-header{padding:11px 14px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:12px;font-weight:500}
+.card-body{padding:14px}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.field-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:3px}
+.field-label{font-size:10px;color:var(--color-text-tertiary)}
+.field-val{font-size:13px;font-weight:500}
+.field-val-muted{font-size:13px;color:var(--color-text-secondary)}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:var(--border-radius-md);display:inline-block}
+.b-blue{background:#E6F1FB;color:#0C447C}
+.b-teal{background:#E1F5EE;color:#085041}
+.b-amber{background:#FAEEDA;color:#633806}
+.b-purple{background:#EEEDFE;color:#3C3489}
+.b-gray{background:#F1EFE8;color:#444441}
+.b-red{background:#FCEBEB;color:#791F1F}
+@media(prefers-color-scheme:dark){
+  .b-blue{background:#0C447C;color:#B5D4F4}
+  .b-teal{background:#085041;color:#9FE1CB}
+  .b-amber{background:#633806;color:#FAC775}
+  .b-purple{background:#3C3489;color:#CECBF6}
+  .b-gray{background:#444441;color:#D3D1C7}
+  .b-red{background:#791F1F;color:#F7C1C1}
+  .conf-val{color:#5DCAA5}
+}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:12px 0}
+.segment-row{display:flex;gap:8px;align-items:stretch}
+.segment-card{flex:1;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.seg-role{font-size:12px;font-weight:500;margin-bottom:4px}
+.seg-pct{font-size:20px;font-weight:500;margin-bottom:2px}
+.seg-sub{font-size:10px;color:var(--color-text-tertiary)}
+.pct-bar{height:3px;background:var(--color-border-tertiary);border-radius:2px;overflow:hidden;margin-top:8px}
+.pct-fill{height:100%;border-radius:2px}
+.risk-list{display:flex;flex-direction:column;gap:8px}
+.risk-item{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:var(--border-radius-md);background:var(--color-background-secondary)}
+.risk-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.risk-body{flex:1}
+.risk-title{font-size:12px;font-weight:500;margin-bottom:2px}
+.risk-mit{font-size:11px;color:var(--color-text-secondary)}
+.risk-footer{display:flex;gap:6px;align-items:center;margin-top:4px}
+.risk-by{font-size:10px;color:var(--color-text-tertiary)}
+.rules-list{display:flex;flex-direction:column;gap:6px}
+.rule-item{display:flex;gap:8px;align-items:flex-start;font-size:12px;padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border-left:2px solid #AFA9EC;border-top-left-radius:0;border-bottom-left-radius:0}
+.rule-if{color:var(--color-text-secondary)}
+.rule-arrow{color:var(--color-text-tertiary);flex-shrink:0;font-size:11px;margin-top:1px}
+.rule-then{font-weight:500}
+.chat-area{display:flex;flex-direction:column;gap:8px}
+.chat-bubble{max-width:85%;padding:9px 12px;border-radius:var(--border-radius-lg);font-size:12px;line-height:1.5}
+.bubble-agent{background:var(--color-background-secondary);color:var(--color-text-primary);align-self:flex-start;border-bottom-left-radius:2px}
+.bubble-user{background:#E6F1FB;color:#0C447C;align-self:flex-end;border-bottom-right-radius:2px}
+@media(prefers-color-scheme:dark){
+  .bubble-user{background:#0C447C;color:#B5D4F4}
+}
+.bubble-meta{font-size:10px;color:var(--color-text-tertiary);margin-top:2px}
+.bubble-wrap-agent{display:flex;flex-direction:column;align-items:flex-start}
+.bubble-wrap-user{display:flex;flex-direction:column;align-items:flex-end}
+.next-q{margin-top:8px;padding:10px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary)}
+.next-q-label{font-size:10px;color:var(--color-text-tertiary);margin-bottom:4px}
+.next-q-text{font-size:12px;color:var(--color-text-secondary);font-style:italic}
+.propagation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.prop-card{padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);display:flex;flex-direction:column;gap:4px}
+.prop-agent{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.05em}
+.prop-instruction{font-size:12px;color:var(--color-text-primary)}
+.ask-btn{font-size:11px;padding:5px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer;margin-top:6px;display:inline-block}
+.ask-btn:hover{background:var(--color-background-secondary)}
+.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.arc-row{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:8px}
+.arc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.arc-label{color:var(--color-text-tertiary);font-size:10px;min-width:50px}
+.arc-val{font-weight:500}
+.arc-line{flex:1;height:1px;background:var(--color-border-tertiary)}
+</style>
+
+<div class="z1">
+
+  <div class="top-row">
+    <div>
+      <div class="z-title">zona 1 — diagnóstico de contexto</div>
+      <div class="z-meta">Lanzamiento Producto X · v2 · Nov 15, 2024</div>
+    </div>
+    <div class="confidence-wrap">
+      <span class="conf-label">completitud</span>
+      <div class="conf-bar"><div class="conf-fill" style="width:87%"></div></div>
+      <span class="conf-val">87%</span>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">evento</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="field-grid-3">
+          <div class="field"><div class="field-label">tipo</div><span class="badge b-blue">pitch deck</span></div>
+          <div class="field"><div class="field-label">nombre</div><div class="field-val">Demo Day Serie A</div></div>
+          <div class="field"><div class="field-label">fecha</div><div class="field-val-muted">Dic 1, 2024</div></div>
+          <div class="field"><div class="field-label">formato</div><span class="badge b-gray">presencial</span></div>
+          <div class="field"><div class="field-label">duración</div><div class="field-val">20 min <span style="font-size:11px;color:var(--color-text-tertiary)">+ 10 Q&A</span></div></div>
+          <div class="field"><div class="field-label">idioma</div><div class="field-val-muted">español</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="field-grid">
+          <div class="field"><div class="field-label">lugar</div><div class="field-val-muted">San Francisco, CA</div></div>
+          <div class="field"><div class="field-label">nivel de formalidad</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+              <div style="display:flex;gap:3px">${[1,2,3,4,5,6,7,8,9,10].map(i=>`<div style="width:10px;height:10px;border-radius:2px;background:${i<=8?'#185FA5':'var(--color-border-tertiary)'}"></div>`).join('')}</div>
+              <span style="font-size:11px;color:var(--color-text-secondary)">8/10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">audiencia</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="segment-row">
+          <div class="segment-card">
+            <div class="seg-role">decision makers</div>
+            <div class="seg-pct" style="color:#185FA5">75%</div>
+            <div class="seg-sub">general partner · fintech experto</div>
+            <div class="pct-bar"><div class="pct-fill" style="width:75%;background:#378ADD"></div></div>
+          </div>
+          <div class="segment-card">
+            <div class="seg-role">evaluators</div>
+            <div class="seg-pct" style="color:#0F6E56">25%</div>
+            <div class="seg-sub">analyst · fintech avanzado</div>
+            <div class="pct-bar"><div class="pct-fill" style="width:25%;background:#1D9E75"></div></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="field-grid">
+          <div class="field"><div class="field-label">baseline emocional</div><span class="badge b-amber">escéptico</span></div>
+          <div class="field"><div class="field-label">tamaño</div><div class="field-val">8 personas</div></div>
+          <div class="field"><div class="field-label">motivación primaria</div><div class="field-val-muted">retorno financiero</div></div>
+          <div class="field"><div class="field-label">miedo primario</div><div class="field-val-muted">riesgo de ejecución</div></div>
+          <div class="field"><div class="field-label">atención estimada</div><div class="field-val">7 min</div></div>
+          <div class="field"><div class="field-label">familiaridad con presentador</div><span class="badge b-gray">ninguna</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="section-label">objetivo</div>
+      <div class="card">
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div class="field"><div class="field-label">primario</div><div class="field-val" style="font-size:12px">conseguir segunda reunión</div></div>
+          <div class="field"><div class="field-label">acción deseada</div><div class="field-val-muted" style="font-size:12px">agendar due diligence</div></div>
+          <div class="field"><div class="field-label">métrica de éxito</div><div class="field-val-muted" style="font-size:12px">3 de 8 piden follow-up</div></div>
+          <div class="divider"></div>
+          <div class="field"><div class="field-label">qué deben recordar</div><div class="field-val-muted" style="font-size:12px;font-style:italic">"el problema es real, el equipo puede resolverlo"</div></div>
+          <div class="field"><div class="field-label">qué deben sentir</div><span class="badge b-teal">confianza con urgencia leve</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">tono y narrativa</div>
+      <div class="card">
+        <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+          <div class="field"><div class="field-label">tono primario</div><span class="badge b-purple">inspiracional + datos</span></div>
+          <div class="field"><div class="field-label">arco narrativo</div><div class="field-val-muted" style="font-size:12px">problema → solución → visión</div></div>
+          <div class="field"><div class="field-label">gancho</div><span class="badge b-gray">dato sorpresivo</span></div>
+          <div class="field"><div class="field-label">prueba</div><div class="field-val-muted" style="font-size:12px">caso real con métricas</div></div>
+          <div class="divider"></div>
+          <div class="arc-row"><div class="arc-dot" style="background:#378ADD"></div><span class="arc-label">apertura</span><div class="arc-line"></div><span class="arc-val" style="font-size:11px">curiosidad</span></div>
+          <div class="arc-row"><div class="arc-dot" style="background:#EF9F27"></div><span class="arc-label">desarrollo</span><div class="arc-line"></div><span class="arc-val" style="font-size:11px">tensión resuelta</span></div>
+          <div class="arc-row"><div class="arc-dot" style="background:#1D9E75"></div><span class="arc-label">cierre</span><div class="arc-line"></div><span class="arc-val" style="font-size:11px">confianza</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">restricciones</div>
+    <div class="card">
+      <div class="card-body">
+        <div class="field-grid">
+          <div class="field">
+            <div class="field-label">temas a evitar</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">
+              <span class="badge b-red">competidor X (NDA)</span>
+              <span class="badge b-red">ronda anterior fallida</span>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-label">inclusiones obligatorias</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">
+              <span class="badge b-teal">tracción ARR</span>
+              <span class="badge b-teal">roadmap 18 meses</span>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="field"><div class="field-label">contexto previo</div><div class="field-val-muted" style="font-size:12px;font-style:italic">el lead investor ya vio el deck v1 hace 3 semanas</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">alertas de riesgo</div>
+    <div class="risk-list">
+      <div class="risk-item">
+        <div class="risk-dot" style="background:#E24B4A"></div>
+        <div class="risk-body">
+          <div class="risk-title">audiencia escéptica — riesgo de desconexión por datos consecutivos</div>
+          <div class="risk-mit">Mitigación: no superar 2 slides de datos sin elemento narrativo</div>
+          <div class="risk-footer"><span class="badge b-red">alta</span><span class="risk-by">agente diagnóstico · Nov 15</span></div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-dot" style="background:#EF9F27"></div>
+        <div class="risk-body">
+          <div class="risk-title">20 min es ajustado para 7 slides con Q&A incluido</div>
+          <div class="risk-mit">Mitigación: preparar versión de 15 min como fallback</div>
+          <div class="risk-footer"><span class="badge b-amber">media</span><span class="risk-by">agente ritmo · Nov 15</span></div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-dot" style="background:#E24B4A"></div>
+        <div class="risk-body">
+          <div class="risk-title">lead investor ya vio v1 — necesita ver evolución clara</div>
+          <div class="risk-mit">Mitigación: slide explícito de "qué cambió desde la última vez"</div>
+          <div class="risk-footer"><span class="badge b-red">alta</span><span class="risk-by">agente diagnóstico · Nov 15</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">reglas de propagación a agentes</div>
+    <div class="propagation-grid">
+      <div class="prop-card">
+        <div class="prop-agent">agente narrativa</div>
+        <div class="prop-instruction">máximo 2 valles consecutivos <span style="color:var(--color-text-tertiary);font-size:11px">← audiencia escéptica</span></div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-agent">agente narrativa</div>
+        <div class="prop-instruction">excluir analogías humorísticas <span style="color:var(--color-text-tertiary);font-size:11px">← humor no permitido</span></div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-agent">agente ritmo</div>
+        <div class="prop-instruction">alerta si slides &gt; 8 <span style="color:var(--color-text-tertiary);font-size:11px">← duración &lt; 25 min</span></div>
+      </div>
+      <div class="prop-card">
+        <div class="prop-agent">agente assets</div>
+        <div class="prop-instruction">tono visual: sobrio + datos <span style="color:var(--color-text-tertiary);font-size:11px">← formalidad 8/10</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">sesión de diagnóstico</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">conversación con agente</span>
+        <span class="badge b-gray">4 turnos · modo voz</span>
+      </div>
+      <div class="card-body">
+        <div class="chat-area">
+          <div class="bubble-wrap-agent">
+            <div class="chat-bubble bubble-agent">¿Cuál es el único resultado que haría que esta presentación fuera un éxito para ti?</div>
+            <div class="bubble-meta">agente diagnóstico</div>
+          </div>
+          <div class="bubble-wrap-user">
+            <div class="chat-bubble bubble-user">Que al menos tres de los ocho inversores me pidan una segunda reunión.</div>
+            <div class="bubble-meta">usuario · voz → whisper</div>
+          </div>
+          <div class="bubble-wrap-agent">
+            <div class="chat-bubble bubble-agent">¿Qué es lo que más temen estos inversores de apostar por un equipo como el tuyo?</div>
+            <div class="bubble-meta">agente diagnóstico</div>
+          </div>
+          <div class="bubble-wrap-user">
+            <div class="chat-bubble bubble-user">Que no podamos ejecutar. Tenemos tecnología sólida pero somos un equipo joven.</div>
+            <div class="bubble-meta">usuario · voz → whisper</div>
+          </div>
+        </div>
+        <div class="next-q">
+          <div class="next-q-label">siguiente pregunta pendiente — confianza baja en campos: atención estimada, contexto previo</div>
+          <div class="next-q-text">"¿Existe algún tema políticamente sensible para este grupo específico de inversores?"</div>
+          <button class="ask-btn" onclick="sendPrompt('Continúa el diagnóstico de la zona 1 con la siguiente pregunta pendiente sobre temas sensibles para este grupo de inversores')">continuar diagnóstico ↗</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

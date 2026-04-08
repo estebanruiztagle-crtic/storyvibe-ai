@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zona 2 — Tópicos y Narrativa</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f8f8f6;color:#1a1a1a;padding:1.5rem 1rem}
+.z2{display:flex;flex-direction:column;gap:1.25rem;max-width:900px;margin:0 auto}
+.top-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.z-title{font-size:15px;font-weight:500}
+.z-meta{font-size:12px;color:#666;margin-top:2px}
+.tabs{display:flex;gap:0;border:0.5px solid #ddd;border-radius:8px;overflow:hidden;width:fit-content}
+.tab{font-size:12px;padding:6px 16px;cursor:pointer;background:transparent;border:none;color:#666;transition:background 0.15s}
+.tab.active{background:#efefef;color:#1a1a1a;font-weight:500}
+.tab:not(:last-child){border-right:0.5px solid #ddd}
+.section-label{font-size:10px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.card{background:#fff;border:0.5px solid #e0e0e0;border-radius:12px;overflow:hidden}
+.card-body{padding:14px}
+.badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:8px;display:inline-block}
+.b-blue{background:#E6F1FB;color:#0C447C}
+.b-teal{background:#E1F5EE;color:#085041}
+.b-amber{background:#FAEEDA;color:#633806}
+.b-purple{background:#EEEDFE;color:#3C3489}
+.b-gray{background:#F1EFE8;color:#444441}
+.b-coral{background:#FAECE7;color:#712B13}
+.divider{height:0.5px;background:#e0e0e0;margin:12px 0}
+.zone-panel{display:none;flex-direction:column;gap:1.25rem}
+.zone-panel.active{display:flex}
+.pattern-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pattern-card{background:#f4f4f2;border-radius:8px;padding:10px 12px}
+.pat-label{font-size:10px;color:#999;margin-bottom:4px}
+.pat-val{font-size:13px;font-weight:500}
+.pat-sub{font-size:10px;color:#666;margin-top:2px}
+.confidence-wrap{display:flex;align-items:center;gap:8px;margin-top:6px}
+.conf-bar{flex:1;height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden}
+.conf-fill{height:100%;border-radius:2px;background:#1D9E75}
+.conf-val{font-size:11px;font-weight:500;color:#0F6E56}
+.topic-list{display:flex;flex-direction:column;gap:6px}
+.topic-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:0.5px solid #e0e0e0;cursor:pointer;transition:background 0.15s;background:#fff}
+.topic-item:hover{background:#f4f4f2}
+.topic-item.rejected{opacity:0.45}
+.topic-check{width:16px;height:16px;border-radius:4px;border:0.5px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.topic-check.checked{background:#1D9E75;border-color:#1D9E75}
+.check-mark{width:8px;height:8px;border-bottom:1.5px solid white;border-right:1.5px solid white;transform:rotate(45deg) translate(-1px,-2px)}
+.topic-body{flex:1;min-width:0}
+.topic-label{font-size:13px;font-weight:500}
+.topic-meta{display:flex;gap:6px;margin-top:3px;flex-wrap:wrap;align-items:center}
+.topic-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.score-wrap{display:flex;align-items:center;gap:5px}
+.score-bar{width:60px;height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden}
+.score-val{font-size:11px;font-weight:500;min-width:22px;text-align:right}
+.mandatory-flag{font-size:9px;color:#085041;font-weight:500}
+.system-flag{font-size:9px;color:#3C3489;font-weight:500}
+.rejected-reason{font-size:10px;color:#999;font-style:italic}
+.summary-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.sum-card{background:#f4f4f2;border-radius:8px;padding:10px 12px}
+.sum-label{font-size:10px;color:#999;margin-bottom:3px}
+.sum-val{font-size:18px;font-weight:500}
+.contract-banner{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f4f4f2;border-radius:8px;border-left:2px solid #1D9E75}
+.contract-text{font-size:12px;color:#666}
+.contract-status{font-size:11px;font-weight:500;color:#0F6E56}
+.ask-btn{font-size:11px;padding:5px 12px;border-radius:8px;border:0.5px solid #ccc;background:transparent;color:#666;cursor:pointer}
+.ask-btn:hover{background:#f4f4f2}
+.st-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.st-card{border:0.5px solid #e0e0e0;border-radius:12px;padding:14px;cursor:pointer;transition:border-color 0.2s,background 0.2s;display:flex;flex-direction:column;gap:10px;background:#fff}
+.st-card:hover{background:#f4f4f2}
+.st-card.selected{border:2px solid #185FA5;background:#fff}
+.rec-badge{font-size:9px;font-weight:500;background:#E1F5EE;color:#085041;padding:2px 7px;border-radius:8px}
+.st-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.st-name{font-size:13px;font-weight:500}
+.st-origin{font-size:10px;color:#999;margin-top:1px}
+.fit-score{font-size:18px;font-weight:500}
+.fit-label{font-size:10px;color:#999}
+.st-description{font-size:12px;color:#666;line-height:1.5}
+.fit-reasons{display:flex;flex-direction:column;gap:4px}
+.fit-reason{display:flex;gap:6px;font-size:11px;color:#666;align-items:flex-start}
+.fit-dot{width:5px;height:5px;border-radius:50%;background:#1D9E75;flex-shrink:0;margin-top:4px}
+.arc-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px}
+.arc-emotion{font-size:10px;padding:2px 7px;background:#f4f4f2;border-radius:8px;color:#666}
+.arc-arrow{font-size:10px;color:#999}
+.risk-note{font-size:11px;color:#999;font-style:italic;padding-top:6px;border-top:0.5px solid #e0e0e0}
+.st-footer{display:flex;justify-content:flex-end}
+.select-btn{font-size:11px;padding:5px 14px;border-radius:8px;border:0.5px solid #ccc;background:transparent;color:#666;cursor:pointer}
+.select-btn:hover{background:#f4f4f2}
+.selected-btn{background:#185FA5;color:white;border-color:#185FA5}
+.selected-banner{padding:12px 14px;background:#f4f4f2;border-radius:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.sel-label{font-size:11px;color:#999}
+.sel-name{font-size:13px;font-weight:500;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="z2">
+
+  <div class="top-row">
+    <div>
+      <div class="z-title">zona 2 — tópicos y narrativa</div>
+      <div class="z-meta">Lanzamiento Producto X · secuencial: 2A → 2B</div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('2a')">2A — mapa de tópicos</button>
+      <button class="tab" onclick="switchTab('2b')">2B — arquitectura narrativa</button>
+    </div>
+  </div>
+
+  <div id="panel-2a" class="zone-panel active">
+
+    <div>
+      <div class="section-label">patrón del autor</div>
+      <div class="card">
+        <div class="card-body">
+          <div class="pattern-row">
+            <div class="pattern-card">
+              <div class="pat-label">presentaciones analizadas</div>
+              <div class="pat-val">7</div>
+              <div class="pat-sub">confianza en desarrollo</div>
+            </div>
+            <div class="pattern-card">
+              <div class="pat-label">tópicos típicos por presentación</div>
+              <div class="pat-val">4 – 7</div>
+              <div class="pat-sub">preferido: 5</div>
+            </div>
+            <div class="pattern-card">
+              <div class="pat-label">sesgos detectados</div>
+              <div class="pat-val">3</div>
+              <div class="pat-sub">datos propios · caso real · evita competencia</div>
+            </div>
+          </div>
+          <div class="confidence-wrap" style="margin-top:12px">
+            <span style="font-size:11px;color:#999">confianza del patrón</span>
+            <div class="conf-bar"><div class="conf-fill" style="width:78%"></div></div>
+            <span class="conf-val">78%</span>
+            <span style="font-size:10px;color:#999">— requiere ~8 presentaciones más para alta confianza</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">tópicos candidatos — haz clic para seleccionar / deseleccionar</div>
+      <div class="topic-list" id="topicList"></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="sum-card"><div class="sum-label">seleccionados</div><div class="sum-val" id="sumSelected">6</div></div>
+      <div class="sum-card"><div class="sum-label">obligatorios</div><div class="sum-val">2</div></div>
+      <div class="sum-card"><div class="sum-label">sugeridos por sistema</div><div class="sum-val" id="sumSystem">1</div></div>
+      <div class="sum-card"><div class="sum-label">cobertura estimada</div><div class="sum-val" id="sumTime">17 min</div></div>
+    </div>
+
+    <div class="contract-banner">
+      <div>
+        <div class="contract-text">contrato 2A → 2B</div>
+        <div style="font-size:11px;color:#999;margin-top:2px">6 tópicos validados listos para arquitectura narrativa</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="contract-status" id="contractStatus">listo para 2B</span>
+        <button class="ask-btn" onclick="switchTab('2b')">ir a 2B →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="panel-2b" class="zone-panel">
+
+    <div>
+      <div class="section-label">investigación de frameworks</div>
+      <div class="card">
+        <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+          <div>
+            <div style="font-size:12px;font-weight:500">búsqueda activa sobre storytelling aplicado a pitch</div>
+            <div style="font-size:11px;color:#666;margin-top:3px">6 fuentes consultadas · 4 frameworks evaluados · calibrados contra zona 1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">selecciona el framework narrativo</div>
+      <div class="st-grid" id="stGrid"></div>
+    </div>
+
+    <div id="selectedBanner" style="display:none">
+      <div class="selected-banner">
+        <div>
+          <div class="sel-label">framework seleccionado</div>
+          <div class="sel-name" id="selectedName"></div>
+        </div>
+        <button class="ask-btn">generar narrativa y curva emocional →</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const topics = [
+  {id:'t01',label:'brecha de inclusión financiera LATAM',type:'problema_contexto',origin:'investigación web',score:8.4,selected:true,mandatory:false,system:false,duration:2,rejected_reason:null},
+  {id:'t02',label:'tamaño de mercado $150B',type:'dato_duro',origin:'investigación web',score:8.1,selected:true,mandatory:false,system:true,duration:2,rejected_reason:null},
+  {id:'t03',label:'solución propuesta',type:'propuesta_valor',origin:'documento interno',score:9.2,selected:true,mandatory:false,system:false,duration:3,rejected_reason:null},
+  {id:'t04',label:'caso cliente Banco X',type:'prueba_social',origin:'documento interno',score:8.7,selected:true,mandatory:false,system:false,duration:3,rejected_reason:null},
+  {id:'t05',label:'tracción ARR $2.1M',type:'dato_duro',origin:'documento interno',score:9.0,selected:true,mandatory:true,system:false,duration:3,rejected_reason:null},
+  {id:'t06',label:'roadmap 18 meses',type:'visión',origin:'documento interno',score:7.9,selected:true,mandatory:true,system:false,duration:4,rejected_reason:null},
+  {id:'t07',label:'análisis competitivo',type:'contexto_mercado',origin:'investigación web',score:5.4,selected:false,mandatory:false,system:false,duration:3,rejected_reason:'contradice restricción zona 1 + bajo patrón del autor'},
+];
+
+const typeBadge = {
+  'problema_contexto':'b-blue','dato_duro':'b-gray','propuesta_valor':'b-purple',
+  'prueba_social':'b-teal','visión':'b-amber','contexto_mercado':'b-coral'
+};
+
+const scoreColor = s => s>=8.5?'#1D9E75':s>=7?'#378ADD':'#888780';
+
+function renderTopics(){
+  const list = document.getElementById('topicList');
+  list.innerHTML='';
+  topics.forEach(t=>{
+    const el=document.createElement('div');
+    el.className='topic-item'+((!t.selected&&t.rejected_reason)?' rejected':'');
+    el.innerHTML=`
+      <div class="topic-check ${t.selected?'checked':''}">
+        ${t.selected?'<div class="check-mark"></div>':''}
+      </div>
+      <div class="topic-body">
+        <div class="topic-label">${t.label}</div>
+        <div class="topic-meta">
+          <span class="badge ${typeBadge[t.type]}">${t.type.replace(/_/g,' ')}</span>
+          <span style="font-size:10px;color:#999">${t.origin}</span>
+          ${t.mandatory?'<span class="mandatory-flag">obligatorio</span>':''}
+          ${t.system&&t.selected?'<span class="system-flag">sugerido por sistema</span>':''}
+          ${t.rejected_reason?`<span class="rejected-reason">${t.rejected_reason}</span>`:''}
+        </div>
+      </div>
+      <div class="topic-right">
+        <div class="score-wrap">
+          <div class="score-bar"><div style="width:${t.score*10}%;height:100%;border-radius:2px;background:${scoreColor(t.score)}"></div></div>
+          <span class="score-val" style="color:${scoreColor(t.score)}">${t.score}</span>
+        </div>
+        <span style="font-size:10px;color:#999">${t.duration} min</span>
+      </div>`;
+    if(!t.mandatory){
+      el.addEventListener('click',()=>{t.selected=!t.selected;renderTopics();updateSummary();});
+    }
+    list.appendChild(el);
+  });
+}
+
+function updateSummary(){
+  const sel=topics.filter(t=>t.selected);
+  document.getElementById('sumSelected').textContent=sel.length;
+  document.getElementById('sumSystem').textContent=sel.filter(t=>t.system).length;
+  document.getElementById('sumTime').textContent=sel.reduce((a,t)=>a+t.duration,0)+' min';
+  const ready=sel.length>=4;
+  document.getElementById('contractStatus').textContent=ready?'listo para 2B':'selecciona al menos 4 tópicos';
+  document.getElementById('contractStatus').style.color=ready?'#0F6E56':'#A32D2D';
+}
+
+renderTopics();
+
+const frameworks=[
+  {id:'st01',name:'problema — solución — visión',origin:'McKee / Duarte',fit:9.2,recommended:true,
+   description:'Establece el dolor del mercado, presenta la solución como inevitable y proyecta el futuro que el inversor puede co-crear.',
+   reasons:['audiencia escéptica responde bien a estructura lógica clara','permite integrar datos duros sin perder momentum','cierre aspiracional activa confianza — emoción objetivo de zona 1'],
+   arc:['curiosidad','tensión','alivio','excitación','confianza'],
+   risk:'puede sentirse formulaico si no hay gancho fuerte en la apertura'},
+  {id:'st02',name:'el mundo cambia — nosotros lo vimos primero',origin:'Sequoia pitch framework',fit:8.4,recommended:false,
+   description:'Abre con una tendencia macro inevitable, posiciona al equipo como quienes detectaron la oportunidad antes que nadie.',
+   reasons:['efectivo con inversores de VC familiarizados con Sequoia','dato de mercado $150B encaja naturalmente como evidencia'],
+   arc:['sorpresa','curiosidad','urgencia','confianza'],
+   risk:'requiere credenciales de visión temprana — validar con zona 1'},
+  {id:'st03',name:'el héroe con un problema',origin:'StoryBrand — Donald Miller',fit:7.8,recommended:false,
+   description:'El cliente es el héroe, el producto es la guía. La narrativa orbita alrededor de la transformación del cliente.',
+   reasons:['caso cliente Banco X encaja como historia central','humaniza la propuesta ante audiencia técnicamente escéptica'],
+   arc:['empatía','tensión','esperanza','satisfacción','confianza'],
+   risk:'puede diluir datos duros si no se integran con cuidado'},
+  {id:'st04',name:'antes — después — puente',origin:'framework de copywriting aplicado a pitch',fit:7.1,recommended:false,
+   description:'Contrasta el estado actual del mercado con el futuro posible y posiciona el producto como el puente entre ambos.',
+   reasons:['estructura simple para slots de tiempo corto','20 min ajustados — minimiza riesgo de exceder tiempo'],
+   arc:['incomodidad','esperanza','confianza'],
+   risk:'arco emocional corto — pocos picos, riesgo de presentación plana'},
+];
+
+let selectedFw=null;
+
+function renderFrameworks(){
+  const grid=document.getElementById('stGrid');
+  grid.innerHTML='';
+  frameworks.forEach(fw=>{
+    const el=document.createElement('div');
+    el.className='st-card'+(selectedFw===fw.id?' selected':'');
+    el.innerHTML=`
+      <div class="st-card-header">
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <div class="st-name">${fw.name}</div>
+            ${fw.recommended?'<span class="rec-badge">recomendado</span>':''}
+          </div>
+          <div class="st-origin">${fw.origin}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="fit-score" style="color:${scoreColor(fw.fit)}">${fw.fit}</div>
+          <div class="fit-label">fit score</div>
+        </div>
+      </div>
+      <div class="st-description">${fw.description}</div>
+      <div class="fit-reasons">
+        ${fw.reasons.map(r=>`<div class="fit-reason"><div class="fit-dot"></div><span>${r}</span></div>`).join('')}
+      </div>
+      <div>
+        <div style="font-size:10px;color:#999;margin-bottom:4px">arco emocional propuesto</div>
+        <div class="arc-row">
+          ${fw.arc.map((e,i)=>`<span class="arc-emotion">${e}</span>${i<fw.arc.length-1?'<span class="arc-arrow">→</span>':''}`).join('')}
+        </div>
+      </div>
+      <div class="risk-note">riesgo: ${fw.risk}</div>
+      <div class="st-footer">
+        <button class="select-btn ${selectedFw===fw.id?'selected-btn':''}" data-id="${fw.id}" data-name="${fw.name}">
+          ${selectedFw===fw.id?'seleccionado':'seleccionar'}
+        </button>
+      </div>`;
+    el.querySelector('.select-btn').addEventListener('click',e=>{
+      e.stopPropagation();
+      selectedFw=fw.id;
+      document.getElementById('selectedName').textContent=fw.name;
+      document.getElementById('selectedBanner').style.display='block';
+      renderFrameworks();
+    });
+    grid.appendChild(el);
+  });
+}
+
+renderFrameworks();
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['2a','2b'][i]===tab));
+  document.getElementById('panel-2a').classList.toggle('active',tab==='2a');
+  document.getElementById('panel-2b').classList.toggle('active',tab==='2b');
+}
+</script>
+</body>
+</html>

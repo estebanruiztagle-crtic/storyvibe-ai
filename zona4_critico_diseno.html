@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zona 4 — Crítico de Diseño</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f3ef;
+  --surface:#ffffff;
+  --surface2:#efefeb;
+  --surface3:#e8e6e1;
+  --border:#dddbd6;
+  --border2:#c8c6c0;
+  --text:#1a1916;
+  --text2:#6b6860;
+  --text3:#a8a69f;
+  --accent:#2d4a3e;
+  --accent2:#4a7c66;
+  --pass:#1D9E75;
+  --warn:#BA7517;
+  --fail:#A32D2D;
+  --info:#185FA5;
+  --mono:'IBM Plex Mono',monospace;
+  --serif:'Playfair Display',serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;min-height:100vh}
+
+.layout{display:grid;grid-template-columns:220px 1fr 280px;height:100vh;overflow:hidden}
+
+.left{background:var(--surface);border-right:0.5px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.left-head{padding:14px;border-bottom:0.5px solid var(--border)}
+.zone-label{font-size:9px;color:var(--text3);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px}
+.zone-title{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--text);line-height:1.2}
+.canva-status{margin-top:10px;display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2)}
+.canva-dot{width:6px;height:6px;border-radius:50%;background:var(--pass);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.slides-nav{flex:1;overflow-y:auto;padding:8px}
+.slides-nav::-webkit-scrollbar{width:3px}
+.slides-nav::-webkit-scrollbar-thumb{background:var(--border2)}
+.slide-nav-item{padding:8px 10px;border-radius:6px;cursor:pointer;margin-bottom:3px;border:0.5px solid transparent;transition:all 0.15s;display:flex;align-items:center;gap:8px}
+.slide-nav-item:hover{background:var(--surface2)}
+.slide-nav-item.active{background:var(--surface2);border-color:var(--border2)}
+.nav-num{font-size:10px;color:var(--text3);min-width:18px}
+.nav-label{font-size:11px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-status{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;flex-shrink:0}
+.ns-pass{background:#e1f5ee;color:var(--pass)}
+.ns-warn{background:#faeeda;color:var(--warn)}
+.ns-fail{background:#fcebeb;color:var(--fail)}
+.ns-pending{background:var(--surface3);color:var(--text3)}
+
+.summary-footer{padding:12px;border-top:0.5px solid var(--border)}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sum-item{background:var(--surface2);border-radius:5px;padding:7px 8px}
+.sum-label{font-size:9px;color:var(--text3);margin-bottom:2px}
+.sum-val{font-size:14px;font-weight:500}
+
+.center{display:flex;flex-direction:column;overflow:hidden;border-right:0.5px solid var(--border)}
+.center-head{padding:14px 18px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.slide-badge{font-size:10px;padding:3px 10px;border-radius:4px;background:var(--surface2);color:var(--text2);border:0.5px solid var(--border)}
+.slide-topic{font-family:var(--serif);font-size:16px;font-style:italic;color:var(--text)}
+.eval-status-badge{font-size:10px;padding:4px 12px;border-radius:20px;font-weight:500}
+.esb-pass{background:#e1f5ee;color:var(--pass)}
+.esb-warn{background:#faeeda;color:var(--warn)}
+.esb-fail{background:#fcebeb;color:var(--fail)}
+.esb-pending{background:var(--surface3);color:var(--text3)}
+
+.center-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:16px}
+.center-body::-webkit-scrollbar{width:3px}
+.center-body::-webkit-scrollbar-thumb{background:var(--border2)}
+
+.sec-label{font-size:9px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.sec-label::after{content:'';flex:1;height:0.5px;background:var(--border)}
+
+.slide-mock{background:var(--text);border-radius:8px;aspect-ratio:16/9;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.mock-bg{position:absolute;inset:0;opacity:0.6}
+.mock-content{position:relative;z-index:1;padding:20px;width:100%}
+.mock-headline{font-family:var(--serif);font-size:14px;color:#f0ede8;font-weight:400;margin-bottom:6px}
+.mock-body-text{font-size:9px;color:rgba(240,237,232,0.7);line-height:1.5;font-family:var(--mono)}
+.mock-stat{font-family:var(--serif);font-size:28px;color:#f0ede8;font-weight:600;margin-bottom:2px}
+.mock-annotation{position:absolute;border:1.5px solid var(--warn);border-radius:4px;background:rgba(186,117,23,0.1)}
+.annotation-tag{position:absolute;top:-10px;left:6px;font-size:8px;background:var(--warn);color:#fff;padding:1px 5px;border-radius:3px;white-space:nowrap;font-family:var(--mono)}
+
+.axes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.axis-card{background:var(--surface);border:0.5px solid var(--border);border-radius:8px;overflow:hidden}
+.axis-header{padding:8px 12px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.axis-name{font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em}
+.axis-score{font-size:16px;font-weight:500}
+.axis-body{padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.check-row{display:flex;align-items:flex-start;gap:6px;font-size:10px}
+.check-icon{width:14px;height:14px;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ci-pass{background:#e1f5ee;color:var(--pass)}
+.ci-fail{background:#fcebeb;color:var(--fail)}
+.check-text{color:var(--text2);line-height:1.4}
+.check-text span{color:var(--text);font-weight:500}
+
+.score-meter{display:flex;align-items:center;gap:8px;margin-top:6px}
+.meter-bar{flex:1;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden}
+.meter-fill{height:100%;border-radius:2px;transition:width 0.5s}
+.meter-val{font-size:11px;font-weight:500;min-width:30px}
+
+.global-score-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px}
+.gs-label{font-size:10px;color:var(--text3)}
+.gs-val{font-size:22px;font-weight:500;font-family:var(--serif)}
+.gs-bar{flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;margin:0 16px}
+.gs-fill{height:100%;border-radius:3px;transition:width 0.5s}
+
+.right{display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
+.right-head{padding:14px;border-bottom:0.5px solid var(--border)}
+.right-title{font-size:11px;font-weight:500;color:var(--text);margin-bottom:2px}
+.right-sub{font-size:10px;color:var(--text3)}
+.suggestions-list{flex:1;overflow-y:auto;padding:10px}
+.suggestions-list::-webkit-scrollbar{width:3px}
+.suggestions-list::-webkit-scrollbar-thumb{background:var(--border2)}
+
+.sug-card{border:0.5px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.sug-card.approved{border-color:var(--pass);opacity:0.7}
+.sug-card.rejected{opacity:0.4}
+.sug-header{padding:8px 10px;display:flex;align-items:center;gap:6px;border-bottom:0.5px solid var(--border)}
+.sug-severity{font-size:8px;padding:2px 6px;border-radius:3px;font-weight:500}
+.sev-high{background:#fcebeb;color:var(--fail)}
+.sev-medium{background:#faeeda;color:var(--warn)}
+.sev-low{background:#e6f1fb;color:var(--info)}
+.sug-axis{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;flex:1}
+.sug-status-icon{font-size:11px}
+.sug-body{padding:10px}
+.sug-problem{font-size:11px;color:var(--text);margin-bottom:6px;line-height:1.4}
+.sug-fix{font-size:10px;color:var(--text2);margin-bottom:8px;line-height:1.4;font-style:italic}
+.diff-block{background:var(--surface2);border-radius:5px;padding:8px 10px;margin-bottom:8px}
+.diff-label{font-size:9px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.05em}
+.diff-before{font-size:10px;color:var(--fail);text-decoration:line-through;margin-bottom:3px;line-height:1.4}
+.diff-after{font-size:10px;color:var(--pass);line-height:1.4}
+.sug-actions{display:flex;gap:5px}
+.sug-btn{flex:1;padding:6px;border-radius:5px;font-family:var(--mono);font-size:10px;cursor:pointer;border:0.5px solid var(--border);transition:all 0.15s}
+.sug-btn-approve{background:var(--pass);color:#fff;border-color:var(--pass)}
+.sug-btn-approve:hover{opacity:0.85}
+.sug-btn-reject{background:transparent;color:var(--text2)}
+.sug-btn-reject:hover{background:var(--surface2)}
+.sug-btn-applied{background:var(--surface2);color:var(--pass);border-color:var(--pass);cursor:default}
+.sug-btn-rejected{background:var(--surface2);color:var(--text3);cursor:default}
+
+.snapshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.snap-item{background:var(--surface2);border-radius:5px;padding:7px 9px}
+.snap-label{font-size:9px;color:var(--text3);margin-bottom:2px}
+.snap-val{font-size:12px;font-weight:500}
+.snap-val.over{color:var(--fail)}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <div class="left">
+    <div class="left-head">
+      <div class="zone-label">zona 4</div>
+      <div class="zone-title">crítico<br>de diseño</div>
+      <div class="canva-status">
+        <div class="canva-dot"></div>
+        canva API conectada · sync activo
+      </div>
+    </div>
+    <div class="slides-nav" id="slidesNav"></div>
+    <div class="summary-footer">
+      <div class="sum-grid" id="sumGrid"></div>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="center-head">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span class="slide-badge" id="cBadge">slide 1</span>
+          <span style="font-size:10px;color:var(--text3)" id="cCurveInfo"></span>
+        </div>
+        <div class="slide-topic" id="cTopic"></div>
+      </div>
+      <span class="eval-status-badge" id="cStatusBadge"></span>
+    </div>
+    <div class="center-body" id="centerBody"></div>
+  </div>
+
+  <div class="right">
+    <div class="right-head">
+      <div class="right-title">sugerencias del agente</div>
+      <div class="right-sub" id="sugCount"></div>
+    </div>
+    <div class="suggestions-list" id="sugList"></div>
+  </div>
+
+</div>
+
+<script>
+const slides = [
+  {slide:1,label:'brecha de inclusión',fullLabel:'brecha de inclusión financiera LATAM',
+   type:'peak',emotion:'curiosidad',intensity:7,
+   globalScore:8.6,globalStatus:'warning',
+   snapshot:{elements:4,textBlocks:2,images:1,words:18,fonts:['Neue Haas Grotesk','Georgia'],colors:['#1A1A2E','#c4a882','#F5F5F5'],layout:'imagen full, texto superpuesto'},
+   axes:{
+     brand:{score:9.2,status:'pass',checks:[
+       {pass:true,text:'tipografía: <span>Neue Haas Grotesk</span> correcta'},
+       {pass:true,text:'paleta: <span>#1A1A2E + #c4a882</span> dentro de brand'},
+       {pass:true,text:'imagen: <span>fotografía documental</span> permitida'},
+       {pass:true,text:'sin patrones verbales prohibidos'},
+     ]},
+     cognitive:{score:7.8,status:'warning',checks:[
+       {pass:false,text:'palabras: <span>18</span> — máximo recomendado <span>15</span>'},
+       {pass:true,text:'jerarquía: <span>2 niveles</span> — ok'},
+       {pass:true,text:'elementos: <span>4</span> — dentro del límite'},
+     ]},
+     emotional:{score:8.8,status:'pass',checks:[
+       {pass:true,text:'peso visual: <span>alto</span> — correcto para pico'},
+       {pass:true,text:'densidad texto: <span>baja</span> — correcta para pico'},
+       {pass:true,text:'paleta: <span>cálida</span> — alineada con curiosidad'},
+     ]},
+   },
+   suggestions:[
+     {id:'s1a',axis:'cognitive_load',severity:'medium',
+      problem:'18 palabras detectadas — 3 sobre el máximo para un slide de pico.',
+      fix:'Reducir a 15 palabras eliminando artículos y reformulando segunda línea.',
+      diffType:'text',before:'40% de los adultos en América Latina no tienen acceso a servicios financieros formales',
+      after:'40% de adultos en LATAM sin acceso financiero formal',status:'pending'},
+   ],
+   mockType:'image_full',mockBg:'linear-gradient(135deg,#1a1208 0%,#2d1a0a 100%)',
+   annotation:{top:'28%',left:'5%',width:'88%',height:'22%',label:'18 palabras — excede límite'},
+  },
+  {slide:2,label:'tamaño de mercado $150B',fullLabel:'tamaño de mercado $150B',
+   type:'valley',emotion:'atención fría',intensity:4,
+   globalScore:9.1,globalStatus:'pass',
+   snapshot:{elements:3,textBlocks:2,images:1,words:11,fonts:['Neue Haas Grotesk'],colors:['#1A1A2E','#F5F5F5'],layout:'dato central, fondo oscuro'},
+   axes:{
+     brand:{score:9.5,status:'pass',checks:[
+       {pass:true,text:'tipografía: <span>Neue Haas Grotesk</span> correcta'},
+       {pass:true,text:'paleta: <span>primaria</span> correcta'},
+       {pass:true,text:'data viz: <span>1 variable</span> — cumple brand'},
+     ]},
+     cognitive:{score:9.0,status:'pass',checks:[
+       {pass:true,text:'palabras: <span>11</span> — dentro del límite'},
+       {pass:true,text:'elementos: <span>3</span> — ok'},
+       {pass:true,text:'jerarquía: <span>2 niveles</span> — ok'},
+     ]},
+     emotional:{score:8.8,status:'pass',checks:[
+       {pass:true,text:'densidad: <span>mínima</span> — correcta para valle'},
+       {pass:true,text:'peso visual: <span>medio</span> — alineado'},
+       {pass:true,text:'color: <span>neutro</span> — correcto para análisis'},
+     ]},
+   },
+   suggestions:[],
+   mockType:'stat',mockBg:'linear-gradient(135deg,#0d1420 0%,#1a1a2e 100%)',
+   annotation:null,
+  },
+  {slide:3,label:'solución propuesta',fullLabel:'solución propuesta',
+   type:'transition',emotion:'esperanza',intensity:6,
+   globalScore:8.2,globalStatus:'warning',
+   snapshot:{elements:5,textBlocks:3,images:1,words:22,fonts:['Neue Haas Grotesk','Georgia'],colors:['#1A1A2E','#1D9E75','#F5F5F5'],layout:'columna texto + imagen derecha'},
+   axes:{
+     brand:{score:8.8,status:'pass',checks:[
+       {pass:true,text:'tipografía: <span>correcta</span>'},
+       {pass:true,text:'uso de <span>#1D9E75</span> como acento — ok'},
+       {pass:false,text:'Georgia en body — brand especifica <span>Neue Haas</span> para UI'},
+     ]},
+     cognitive:{score:7.5,status:'warning',checks:[
+       {pass:false,text:'palabras: <span>22</span> — excede <span>18</span> recomendado para transición'},
+       {pass:true,text:'elementos: <span>5</span> — en límite'},
+       {pass:true,text:'jerarquía: <span>3 niveles</span> — ok'},
+     ]},
+     emotional:{score:8.4,status:'pass',checks:[
+       {pass:true,text:'tono visual: <span>optimista</span> — alineado con esperanza'},
+       {pass:true,text:'transición correcta de valle a pico'},
+     ]},
+   },
+   suggestions:[
+     {id:'s3a',axis:'brand_compliance',severity:'medium',
+      problem:'Fuente Georgia detectada en texto de cuerpo — brand reserva Georgia para elementos editoriales, no body UI.',
+      fix:'Reemplazar Georgia por Neue Haas Grotesk en los 2 bloques de texto cuerpo.',
+      diffType:'font',before:'Georgia · body text',after:'Neue Haas Grotesk · body text',status:'pending'},
+     {id:'s3b',axis:'cognitive_load',severity:'medium',
+      problem:'22 palabras en slide de transición — excede en 4 el máximo recomendado.',
+      fix:'Condensar el tercer párrafo eliminando la oración explicativa.',
+      diffType:'text',before:'Nuestra plataforma conecta a personas no bancarizadas con servicios financieros digitales de forma simple y segura',
+      after:'Conexión directa a servicios financieros digitales',status:'pending'},
+   ],
+   mockType:'split',mockBg:'linear-gradient(135deg,#0f2015 0%,#1a2e1a 100%)',
+   annotation:null,
+  },
+  {slide:4,label:'caso cliente Banco X',fullLabel:'caso cliente Banco X',
+   type:'peak',emotion:'confianza emergente',intensity:8,
+   globalScore:6.5,globalStatus:'fail',
+   snapshot:{elements:6,textBlocks:3,images:1,words:31,fonts:['Neue Haas Grotesk'],colors:['#1A1A2E','#E94560','#F5F5F5'],layout:'texto columna + imagen derecha'},
+   axes:{
+     brand:{score:6.1,status:'fail',checks:[
+       {pass:false,text:'<span>#E94560</span> como fondo de bloque — solo permitido como acento'},
+       {pass:false,text:'data viz: <span>2 variables</span> — brand permite máximo <span>1</span>'},
+       {pass:true,text:'tipografía: <span>correcta</span>'},
+     ]},
+     cognitive:{score:5.2,status:'fail',checks:[
+       {pass:false,text:'palabras: <span>31</span> — excede en <span>11</span> el máximo para pico'},
+       {pass:false,text:'elementos: <span>6</span> — excede límite de <span>5</span>'},
+       {pass:true,text:'jerarquía: <span>3 niveles</span> — ok'},
+     ]},
+     emotional:{score:8.1,status:'pass',checks:[
+       {pass:false,text:'peso visual: <span>medio</span> — esperado <span>alto</span> para intensidad 8'},
+       {pass:true,text:'color acento: <span>activa confianza</span>'},
+     ]},
+   },
+   suggestions:[
+     {id:'s4a',axis:'brand_compliance',severity:'high',
+      problem:'#E94560 usado como fondo de bloque completo — brand lo permite solo en acentos puntuales (<20% del área).',
+      fix:'Reemplazar fondo del bloque con #1A1A2E, mantener #E94560 solo en borde o ícono de énfasis.',
+      diffType:'color',before:'fill: #E94560 (bloque completo)',after:'fill: #1A1A2E + accent border: #E94560',status:'approved'},
+     {id:'s4b',axis:'cognitive_load',severity:'high',
+      problem:'31 palabras en un slide de pico de intensidad 8 — excede en 11 el máximo recomendado.',
+      fix:'Dividir en dato central grande (NPS 72) + contexto en texto pequeño debajo. Layout: stat_callout.',
+      diffType:'layout',before:'párrafo de 31 palabras · tamaño uniforme',after:'NPS 72 · 48px + contexto · 12px · 9 palabras',status:'pending'},
+     {id:'s4c',axis:'brand_compliance',severity:'medium',
+      problem:'Gráfico con 2 variables (NPS + Churn) — brand especifica máximo 1 variable por visualización.',
+      fix:'Separar en dos elementos distintos o priorizar NPS como métrica principal del slide.',
+      diffType:'structure',before:'NPS 72 + Churn 1.4% · mismo gráfico',after:'NPS 72 · elemento principal · Churn en slide siguiente',status:'rejected'},
+   ],
+   mockType:'fail',mockBg:'linear-gradient(135deg,#1a1010 0%,#2d1515 100%)',
+   annotation:{top:'15%',left:'5%',width:'88%',height:'65%',label:'múltiples violaciones'},
+  },
+  {slide:5,label:'tracción ARR $2.1M',fullLabel:'tracción ARR $2.1M',
+   type:'valley',emotion:'análisis',intensity:5,
+   globalScore:null,globalStatus:'pending',
+   snapshot:null,axes:null,suggestions:[],
+   mockType:'pending',mockBg:'linear-gradient(135deg,#101420 0%,#1a1a2e 100%)',annotation:null,
+  },
+  {slide:6,label:'roadmap 18 meses',fullLabel:'roadmap 18 meses',
+   type:'peak',emotion:'excitación',intensity:9,
+   globalScore:null,globalStatus:'pending',
+   snapshot:null,axes:null,suggestions:[],
+   mockType:'pending',mockBg:'linear-gradient(135deg,#100a1a 0%,#1a0820 100%)',annotation:null,
+  },
+];
+
+const statusLabel = {pass:'ok',warning:'alerta',fail:'fallo',pending:'pendiente'};
+const statusColors = {pass:'var(--pass)',warning:'var(--warn)',fail:'var(--fail)',pending:'var(--text3)'};
+const statusBadgeClass = {pass:'esb-pass',warning:'esb-warn',fail:'esb-fail',pending:'esb-pending'};
+const navStatusClass = {pass:'ns-pass',warning:'ns-warn',fail:'ns-fail',pending:'ns-pending'};
+const typeLabel = {peak:'pico',valley:'valle',transition:'transición'};
+
+let active = 0;
+
+function renderNav(){
+  const nav = document.getElementById('slidesNav');
+  nav.innerHTML = '';
+  slides.forEach((s,i) => {
+    const el = document.createElement('div');
+    el.className = 'slide-nav-item' + (i===active?' active':'');
+    const sc = s.globalStatus||'pending';
+    el.innerHTML = `
+      <span class="nav-num">S${s.slide}</span>
+      <span class="nav-label">${s.label}</span>
+      <span class="nav-status ${navStatusClass[sc]}">${s.globalScore!==null?s.globalScore:'?'}</span>`;
+    el.addEventListener('click',()=>{active=i;render();});
+    nav.appendChild(el);
+  });
+}
+
+function renderSummary(){
+  const evaluated = slides.filter(s=>s.globalStatus&&s.globalStatus!=='pending');
+  const pass = slides.filter(s=>s.globalStatus==='pass').length;
+  const warn = slides.filter(s=>s.globalStatus==='warning').length;
+  const fail = slides.filter(s=>s.globalStatus==='fail').length;
+  const allSugs = slides.flatMap(s=>s.suggestions);
+  document.getElementById('sumGrid').innerHTML = `
+    <div class="sum-item"><div class="sum-label">evaluados</div><div class="sum-val">${evaluated.length}/6</div></div>
+    <div class="sum-item"><div class="sum-label">ok / alerta / fallo</div><div class="sum-val">${pass} / ${warn} / ${fail}</div></div>
+    <div class="sum-item"><div class="sum-label">sugerencias</div><div class="sum-val">${allSugs.length}</div></div>
+    <div class="sum-item"><div class="sum-label">aplicadas</div><div class="sum-val" style="color:var(--pass)">${allSugs.filter(s=>s.status==='approved').length}</div></div>`;
+}
+
+function renderCenter(){
+  const s = slides[active];
+  document.getElementById('cBadge').textContent = `slide ${s.slide}`;
+  document.getElementById('cTopic').textContent = s.fullLabel;
+  document.getElementById('cCurveInfo').textContent = `${typeLabel[s.type]} · ${s.emotion} · ${s.intensity}/10`;
+  const sb = document.getElementById('cStatusBadge');
+  sb.className = `eval-status-badge ${statusBadgeClass[s.globalStatus||'pending']}`;
+  sb.textContent = s.globalStatus ? `score global ${s.globalScore}` : 'pendiente de evaluación';
+
+  const body = document.getElementById('centerBody');
+  if(!s.snapshot){
+    body.innerHTML = `
+      <div class="sec-label">previsualización</div>
+      <div class="slide-mock" style="background:${s.mockBg}">
+        <div style="color:rgba(255,255,255,0.2);font-family:var(--serif);font-size:14px;font-style:italic">pendiente de diseño en Canva</div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);text-align:center;padding:8px">el agente evaluará automáticamente cuando el slide sea editado en Canva</div>`;
+    return;
+  }
+
+  const sc = s.globalStatus;
+  const gsColor = statusColors[sc];
+
+  body.innerHTML = `
+    <div class="sec-label">previsualización canva</div>
+    <div class="slide-mock" style="background:${s.mockBg}">
+      ${s.mockType==='stat'?`
+        <div class="mock-content">
+          <div class="mock-stat">$150B</div>
+          <div class="mock-body-text">mercado fintech latinoamérica 2024<br>crecimiento 23% YoY</div>
+        </div>`:
+      s.mockType==='fail'||s.mockType==='image_full'?`
+        <div class="mock-content">
+          <div class="mock-headline">${s.mockType==='fail'?'NPS 72 · Churn 1.4%':'¿Y si el acceso financiero fuera un derecho?'}</div>
+          <div class="mock-body-text">${s.mockType==='fail'?'Banco X logró transformar su operación digital en 90 días con nuestra plataforma. El resultado superó todas las expectativas del equipo directivo y del board.':'40% de los adultos en América Latina no tienen acceso a servicios financieros formales'}</div>
+        </div>`:
+      s.mockType==='split'?`
+        <div class="mock-content">
+          <div class="mock-headline">conectamos lo desconectado</div>
+          <div class="mock-body-text">Nuestra plataforma conecta a personas no bancarizadas con servicios financieros digitales de forma simple y segura. Tecnología probada en 3 mercados.</div>
+        </div>`:`
+        <div style="color:rgba(255,255,255,0.3);font-size:11px">slide en edición</div>`}
+      ${s.annotation?`
+        <div class="mock-annotation" style="top:${s.annotation.top};left:${s.annotation.left};width:${s.annotation.width};height:${s.annotation.height}">
+          <span class="annotation-tag">${s.annotation.label}</span>
+        </div>`:''}
+    </div>
+
+    <div class="sec-label">snapshot canva</div>
+    <div class="snapshot-grid">
+      <div class="snap-item"><div class="snap-label">palabras</div><div class="snap-val ${s.snapshot.words>15?'over':''}">${s.snapshot.words}</div></div>
+      <div class="snap-item"><div class="snap-label">elementos</div><div class="snap-val ${s.snapshot.elements>5?'over':''}">${s.snapshot.elements}</div></div>
+      <div class="snap-item"><div class="snap-label">fuentes detectadas</div><div class="snap-val" style="font-size:10px">${s.snapshot.fonts.join(', ')}</div></div>
+      <div class="snap-item"><div class="snap-label">layout</div><div class="snap-val" style="font-size:10px">${s.snapshot.layout}</div></div>
+    </div>
+
+    <div class="sec-label">evaluación por eje</div>
+    <div class="axes-grid">
+      ${['brand','cognitive','emotional'].map(ax => {
+        const a = s.axes[ax];
+        const axNames = {brand:'brand',cognitive:'cognitivo',emotional:'emocional'};
+        return `<div class="axis-card">
+          <div class="axis-header">
+            <span class="axis-name">${axNames[ax]}</span>
+            <span class="axis-score" style="color:${statusColors[a.status]}">${a.score}</span>
+          </div>
+          <div class="axis-body">
+            ${a.checks.map(c=>`
+              <div class="check-row">
+                <div class="check-icon ${c.pass?'ci-pass':'ci-fail'}">${c.pass?'✓':'✕'}</div>
+                <div class="check-text">${c.text}</div>
+              </div>`).join('')}
+            <div class="score-meter">
+              <div class="meter-bar"><div class="meter-fill" style="width:${a.score*10}%;background:${statusColors[a.status]}"></div></div>
+              <span class="meter-val" style="color:${statusColors[a.status]}">${a.score}</span>
+            </div>
+          </div>
+        </div>`;}).join('')}
+    </div>
+
+    <div class="global-score-row">
+      <div><div class="gs-label">score global</div></div>
+      <div class="gs-bar"><div class="gs-fill" style="width:${s.globalScore*10}%;background:${gsColor}"></div></div>
+      <span class="gs-val" style="color:${gsColor}">${s.globalScore}</span>
+    </div>`;
+}
+
+function renderSuggestions(){
+  const s = slides[active];
+  const list = document.getElementById('sugList');
+  const count = document.getElementById('sugCount');
+  const sugs = s.suggestions;
+  count.textContent = `${sugs.length} sugerencia${sugs.length!==1?'s':''} · ${sugs.filter(x=>x.status==='approved').length} aprobada${sugs.filter(x=>x.status==='approved').length!==1?'s':''}`;
+
+  if(sugs.length===0){
+    list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:11px">${s.globalStatus==='pass'?'sin sugerencias — slide aprobado':'pendiente de evaluación'}</div>`;
+    return;
+  }
+
+  list.innerHTML = sugs.map((sg,si) => {
+    const isApproved = sg.status==='approved';
+    const isRejected = sg.status==='rejected';
+    return `<div class="sug-card ${isApproved?'approved':isRejected?'rejected':''}">
+      <div class="sug-header">
+        <span class="sug-severity sev-${sg.severity}">${sg.severity}</span>
+        <span class="sug-axis">${sg.axis.replace('_',' ')}</span>
+        <span class="sug-status-icon">${isApproved?'✓':isRejected?'✕':'·'}</span>
+      </div>
+      <div class="sug-body">
+        <div class="sug-problem">${sg.problem}</div>
+        <div class="sug-fix">${sg.fix}</div>
+        <div class="diff-block">
+          <div class="diff-label">cambio propuesto</div>
+          <div class="diff-before">${sg.before}</div>
+          <div class="diff-after">→ ${sg.after}</div>
+        </div>
+        ${isApproved?`<div class="sug-actions"><button class="sug-btn sug-btn-applied" disabled>✓ aplicado en canva</button></div>`:
+          isRejected?`<div class="sug-actions"><button class="sug-btn sug-btn-rejected" disabled>rechazado</button></div>`:
+          `<div class="sug-actions">
+            <button class="sug-btn sug-btn-approve" onclick="approveSug(${active},${si})">aprobar → aplicar en canva</button>
+            <button class="sug-btn sug-btn-reject" onclick="rejectSug(${active},${si})">rechazar</button>
+          </div>`}
+      </div>
+    </div>`;}).join('');
+}
+
+function approveSug(ai,si){
+  slides[ai].suggestions[si].status='approved';
+  render();
+}
+
+function rejectSug(ai,si){
+  slides[ai].suggestions[si].status='rejected';
+  render();
+}
+
+function render(){
+  renderNav();
+  renderSummary();
+  renderCenter();
+  renderSuggestions();
+}
+
+render();
+</script>
+</body>
+</html>
