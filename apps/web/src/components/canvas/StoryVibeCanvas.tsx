@@ -499,7 +499,7 @@ export default function StoryVibeCanvas() {
   return (
     <ZonePanelProvider>
       <TldrawEditorContext.Provider value={{ editor }}>
-        <div style={{ width: '100%', height: '100%' }}>
+        <div style={{ width: '100%', height: '100%' }} className="storyvibe-canvas-wrapper">
           <Tldraw
             shapeUtils={customShapeUtils}
             persistenceKey="storyvibe-canvas-v2"

@@ -57,20 +57,27 @@
     @apply bg-background text-foreground;
   }
 }
-.tl-container { background: transparent !important; }
-.tl-canvas { background: transparent !important; }
-.tl-theme__light, .tl-theme__dark {
-  --color-background: transparent !important;
-  --color-grid: rgba(0,0,0,0.05) !important;
+/* ── Canvas background image ───────────────────────────────────────────────── */
+.storyvibe-canvas-wrapper {
+  background-image: url('/fondo-canvas.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
-.tl-theme__light, .tl-theme__dark, .tl-container {
-  --color-background: transparent !important;
-  --color-grid: transparent !important;
+/* Make tldraw transparent so the wrapper image shows through */
+.tl-container,
+.tl-canvas,
+.tl-background {
   background: transparent !important;
   background-color: transparent !important;
-}
-.tl-background {
   fill: transparent !important;
+}
+
+.tl-theme__light,
+.tl-theme__dark {
+  --color-background: transparent !important;
+  --color-grid: rgba(0, 0, 0, 0.04) !important;
 }
 
