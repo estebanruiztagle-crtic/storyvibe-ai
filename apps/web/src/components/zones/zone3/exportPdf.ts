@@ -133,35 +133,26 @@ export function generateZone3Pdf(
 </body>
 </html>`
 
-  // ── Print via hidden iframe ─────────────────────────────────────────────────
-  const iframe = document.createElement('iframe')
-  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;'
-  document.body.appendChild(iframe)
-
-  const doc = iframe.contentDocument ?? iframe.contentWindow?.document
-  if (!doc) { document.body.removeChild(iframe); return }
-
-  doc.open()
-  doc.write(html)
-  doc.close()
-
-  // Wait for images to load before printing
-  const imgs = Array.from(doc.querySelectorAll('img'))
-  const imgsLoaded = imgs.length === 0
-    ? Promise.resolve()
-    : Promise.all(imgs.map((img) =>
-        new Promise<void>((res) => {
-          if ((img as HTMLImageElement).complete) { res(); return }
-          img.addEventListener('load',  () => res())
-          img.addEventListener('error', () => res())
-        })
-      ))
-
-  imgsLoaded.then(() => {
+  // ── Open in new tab and print ───────────────────────────────────────────────
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  const url  = URL.createObjectURL(blob)
+  const win  = window.open(url, '_blank')
+  if (!win) {
+    // Popup blocked — fallback: download as .html
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${(title ?? 'reporte_storyvibe').replace(/[^a-zA-Z0-9_-]/g, '_')}.html`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+    return
+  }
+  win.addEventListener('load', () => {
     setTimeout(() => {
-      iframe.contentWindow?.focus()
-      iframe.contentWindow?.print()
-      setTimeout(() => document.body.removeChild(iframe), 2000)
-    }, 300)
+      win.focus()
+      win.print()
+      // Revoke blob URL after dialog closes (afterprint or fallback)
+      win.addEventListener('afterprint', () => URL.revokeObjectURL(url))
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    }, 400)
   })
 }
