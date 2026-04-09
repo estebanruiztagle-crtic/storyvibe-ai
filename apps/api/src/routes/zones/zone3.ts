@@ -190,4 +190,110 @@ Genera exactamente una sugerencia por cada lámina listada.`,
   }
 })
 
+// ─── POST /generate-image ─────────────────────────────────────────────────────
+router.post('/generate-image', async (req: Request, res: Response) => {
+  const recraftApiKey = process.env.RECRAFT_API_KEY
+  if (!recraftApiKey) {
+    res.status(500).json({ success: false, error: 'RECRAFT_API_KEY no está configurada en el servidor' })
+    return
+  }
+
+  try {
+    const {
+      slideLabel,
+      fullLabel,
+      emotion,
+      intensity,
+      graphicType,
+      palette,
+      zone1Context,
+      style,
+    } = req.body as {
+      slideLabel: string
+      fullLabel: string
+      emotion: string
+      intensity: number
+      graphicType?: string
+      palette?: Array<{ hex: string; role: string; name: string }>
+      zone1Context?: Record<string, unknown>
+      style?: string
+    }
+
+    const recraftStyle = style ?? 'digital_illustration'
+    const paletteDesc = palette && palette.length > 0
+      ? palette.map((p) => `${p.name} (${p.hex}, ${p.role})`).join(', ')
+      : 'not specified'
+
+    // ── Step 1: Claude crafts an optimised Recraft prompt ──────────────────
+    const promptResponse = await getAnthropic().messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 300,
+      system: `You are an expert at writing image generation prompts for Recraft v3, specialised in high-impact visuals for corporate presentations.
+
+Generate ONE short, precise, evocative prompt (40-80 words) that will produce a powerful slide image.
+Rules:
+- Write in English
+- Landscape / 16:9 composition
+- Specify lighting mood, color temperature, and atmosphere
+- Integrate the brand palette colors when provided
+- Do NOT include any text, words, numbers, or charts in the image
+- No people's faces unless essential
+- Output ONLY the prompt, no quotes, no explanation`,
+      messages: [
+        {
+          role: 'user',
+          content: `Create an image prompt for this presentation slide:
+
+Short label: "${slideLabel}"
+Full concept: "${fullLabel}"
+Emotion: ${emotion}
+Emotional intensity: ${intensity}/10
+Suggested graphic type: ${graphicType ?? 'none'}
+Color palette: ${paletteDesc}
+Presentation context: ${JSON.stringify(zone1Context ?? {}, null, 2)}`,
+        },
+      ],
+    })
+
+    const firstBlock = promptResponse.content[0]
+    const imagePrompt =
+      firstBlock?.type === 'text' ? firstBlock.text.trim() : fullLabel
+
+    // ── Step 2: Call Recraft v3 API ────────────────────────────────────────
+    const recraftRes = await fetch('https://external.api.recraft.ai/v1/images/generations', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${recraftApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: imagePrompt,
+        style: recraftStyle,
+        model: 'recraftv3',
+        size: '1365x1024',
+      }),
+    })
+
+    if (!recraftRes.ok) {
+      const errText = await recraftRes.text()
+      console.error('Recraft API error:', recraftRes.status, errText)
+      res.status(500).json({ success: false, error: `Error de Recraft (${recraftRes.status}): ${errText}` })
+      return
+    }
+
+    const recraftData = await recraftRes.json() as { data: Array<{ url: string }> }
+    const imageUrl = recraftData.data[0]?.url
+
+    if (!imageUrl) {
+      res.status(500).json({ success: false, error: 'Recraft no devolvió ninguna imagen' })
+      return
+    }
+
+    res.json({ success: true, imageUrl, usedPrompt: imagePrompt })
+  } catch (error) {
+    console.error('Zone3 generate-image error:', error)
+    res.status(500).json({ success: false, error: 'Error al generar imagen' })
+  }
+})
+
 export { router as zone3Router }

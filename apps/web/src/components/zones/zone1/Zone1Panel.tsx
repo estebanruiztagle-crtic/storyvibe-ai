@@ -396,16 +396,22 @@ interface SourceFile {
 
 function TabFuentes({
   shapeId,
-  onSourcesReady,
+  sources,
+  onSourcesChange,
 }: {
   shapeId: string
-  onSourcesReady?: (sources: SourceFile[]) => void
+  sources: SourceFile[]
+  onSourcesChange: React.Dispatch<React.SetStateAction<SourceFile[]>>
 }) {
-  const [sources, setSources] = useState<SourceFile[]>([])
   const [textInput, setTextInput] = useState('')
   const [textAdded, setTextAdded] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+
+  // Use the parent's React state setter directly — functional updaters
+  // always receive the latest state, avoiding stale-closure bugs when
+  // multiple async setSources calls happen in sequence (e.g. processImageFile).
+  const setSources = onSourcesChange
 
   const addSource = (file: File): SourceFile => {
     const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
@@ -681,11 +687,13 @@ function TabFuentes({
 function TabDiagnostico({
   ctx,
   shapeId,
+  sources,
   onContextUpdate,
   onConversationComplete,
 }: {
   ctx: Zone1Context
   shapeId: string
+  sources: SourceFile[]
   onContextUpdate: (ctx: Zone1Context, completeness: number) => void
   onConversationComplete?: () => void
 }) {
@@ -800,6 +808,18 @@ function TabDiagnostico({
     setIsLoading(true)
     setInputMessage('')
 
+    // Build a compact source summary to give Claude context about uploaded materials
+    const doneSources = sources.filter((s) => s.status === 'done')
+    const sourceSummary = doneSources.length > 0
+      ? doneSources.map((s) => {
+          const content = s.description ?? s.transcription ?? ''
+          const label = s.type === 'image' ? '🖼 Imagen'
+            : s.type === 'audio' ? '🎵 Audio'
+            : s.type === 'video' ? '🎬 Video' : '📝 Texto'
+          return `${label}: ${s.name}${content ? `\n  Contenido: ${content.slice(0, 400)}` : ''}`
+        }).join('\n\n')
+      : null
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
       const response = await fetch(`${apiUrl}/api/v1/zones/zone1/diagnose`, {
@@ -810,6 +830,7 @@ function TabDiagnostico({
           conversationHistory: localCtx.conversation,
           currentContext: localCtx,
           userMessage: finalMessage,
+          sourceSummary,
         }),
       })
 
@@ -1092,6 +1113,7 @@ export default function Zone1Panel({
 }: Zone1PanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>('fuentes')
   const [ctx, setCtx] = useState<Zone1Context>(initialContext ?? EMPTY_ZONE1_CONTEXT)
+  const [sources, setSources] = useState<SourceFile[]>([])
   const [canAdvance, setCanAdvance] = useState(
     (initialContext?.completeness ?? 0) >= 80
   )
@@ -1104,9 +1126,17 @@ export default function Zone1Panel({
 
   const handleConversationComplete = () => setCanAdvance(true)
 
+  const doneSources = sources.filter((s) => s.status === 'done')
+
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'fuentes', label: '📁 Fuentes' },
-    { id: 'diagnostico', label: '🎙 Diagnóstico' },
+    {
+      id: 'fuentes',
+      label: sources.length > 0 ? `📁 Fuentes (${sources.length})` : '📁 Fuentes',
+    },
+    {
+      id: 'diagnostico',
+      label: doneSources.length > 0 ? `🎙 Diagnóstico ✦${doneSources.length}` : '🎙 Diagnóstico',
+    },
     { id: 'datos', label: 'Datos' },
     { id: 'propagacion', label: 'Propagación' },
   ]
@@ -1190,13 +1220,18 @@ export default function Zone1Panel({
       {/* ── Content ── */}
       <div className="flex-1 overflow-y-auto px-5 pt-4">
         {activeTab === 'fuentes' && (
-          <TabFuentes shapeId={shapeId} />
+          <TabFuentes
+            shapeId={shapeId}
+            sources={sources}
+            onSourcesChange={setSources}
+          />
         )}
         {activeTab === 'datos' && <TabDatos ctx={ctx} />}
         {activeTab === 'diagnostico' && (
           <TabDiagnostico
             ctx={ctx}
             shapeId={shapeId}
+            sources={sources}
             onContextUpdate={handleContextUpdate}
             onConversationComplete={handleConversationComplete}
           />

@@ -7,6 +7,7 @@ import type {
   GraphicType,
   PointType,
   ColorSwatch,
+  RecraftStyle,
 } from './types'
 import { EMPTY_ZONE3 } from './types'
 
@@ -51,6 +52,12 @@ const GRAPHIC_EMOJIS: Record<GraphicType, string> = {
   before_after:     '↔',
 }
 
+const RECRAFT_STYLES: { id: RecraftStyle; label: string; emoji: string; desc: string }[] = [
+  { id: 'digital_illustration', label: 'Ilustración digital', emoji: '🎨', desc: 'Estilo gráfico moderno, ideal para conceptos' },
+  { id: 'realistic_image',      label: 'Fotografía realista', emoji: '📸', desc: 'Imágenes fotorrealistas de alta calidad' },
+  { id: 'vector_illustration',  label: 'Vector / Infografía', emoji: '🔷', desc: 'Estilo limpio, perfecto para datos y procesos' },
+]
+
 type ActiveTab = 'palette' | 'slides'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -74,7 +81,7 @@ function typeBgStyle(type: PointType): React.CSSProperties {
 
 function slideStatus(slide: Zone3Slide): 'approved' | 'partial' | 'empty' {
   if (slide.approved) return 'approved'
-  if (slide.useGraphic || slide.uploadedAsset) return 'partial'
+  if (slide.useGraphic || slide.uploadedAsset || slide.generatedImage) return 'partial'
   return 'empty'
 }
 
@@ -172,12 +179,15 @@ export default function Zone3Panel({
       ? { ...initialState, slides: initSlides(curvePointsJson) }
       : initialState
 
-  const [state, setState]                   = useState<Zone3State>(computedInitial)
-  const [activeTab, setActiveTab]           = useState<ActiveTab>('palette')
-  const [activeSlideIndex, setActiveSlide]  = useState(0)
-  const [isGenPalette, setIsGenPalette]     = useState(false)
-  const [isGenGraphics, setIsGenGraphics]   = useState(false)
-  const fileInputRef                        = useRef<HTMLInputElement>(null)
+  const [state, setState]                     = useState<Zone3State>(computedInitial)
+  const [activeTab, setActiveTab]             = useState<ActiveTab>('palette')
+  const [activeSlideIndex, setActiveSlide]    = useState(0)
+  const [isGenPalette, setIsGenPalette]       = useState(false)
+  const [isGenGraphics, setIsGenGraphics]     = useState(false)
+  const [generatingImageFor, setGenImgFor]    = useState<number | null>(null)
+  const [selectedStyle, setSelectedStyle]     = useState<RecraftStyle>('digital_illustration')
+  const [imageError, setImageError]           = useState<string | null>(null)
+  const fileInputRef                          = useRef<HTMLInputElement>(null)
 
   const activeSlide = state.slides[activeSlideIndex]
 
@@ -281,6 +291,58 @@ export default function Zone3Panel({
       setIsGenGraphics(false)
     }
   }, [curvePointsJson, zone1ContextJson, updateState])
+
+  // ── Generate AI image with Recraft ────────────────────────────────────────
+  const handleGenerateImage = useCallback(async (style: RecraftStyle) => {
+    if (!activeSlide) return
+    setGenImgFor(activeSlideIndex)
+    setImageError(null)
+    try {
+      const zone1Context = zone1ContextJson ? JSON.parse(zone1ContextJson) as Record<string, unknown> : {}
+      const palette = state.palette?.swatches ?? []
+      const res = await fetch(`${API_BASE}/api/v1/zones/zone3/generate-image`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slideLabel:  activeSlide.label,
+          fullLabel:   activeSlide.fullLabel,
+          emotion:     activeSlide.emotion,
+          intensity:   activeSlide.intensity,
+          graphicType: activeSlide.graphicSuggestion?.type,
+          palette,
+          zone1Context,
+          style,
+        }),
+      })
+      const data = await res.json() as {
+        success: boolean
+        imageUrl?: string
+        usedPrompt?: string
+        error?: string
+      }
+      if (data.success && data.imageUrl) {
+        updateSlide((s) => ({
+          ...s,
+          generatedImage: {
+            url:    data.imageUrl!,
+            prompt: data.usedPrompt ?? '',
+            style,
+          },
+        }))
+      } else {
+        setImageError(data.error ?? 'No se pudo generar la imagen')
+      }
+    } catch (err) {
+      setImageError(String(err))
+    } finally {
+      setGenImgFor(null)
+    }
+  }, [activeSlide, activeSlideIndex, state.palette, zone1ContextJson, updateSlide])
+
+  const handleRemoveGeneratedImage = useCallback(() => {
+    updateSlide((s) => ({ ...s, generatedImage: undefined }))
+    setImageError(null)
+  }, [updateSlide])
 
   // ── Toggle graphic use ─────────────────────────────────────────────────────
   const handleUseGraphicToggle = useCallback(() => {
@@ -700,6 +762,125 @@ export default function Zone3Panel({
                               {isGenGraphics ? 'Generando...' : '✦ Sugerir gráficos con IA'}
                             </button>
                           )}
+                        </div>
+                      )}
+                    </SectionCard>
+
+                    {/* ── AI Image Generation ──────────────────────────────── */}
+                    <SectionCard title="✨ Imagen IA — Recraft v3">
+                      {activeSlide.generatedImage ? (
+                        /* ── Image result ── */
+                        <div>
+                          <div className="rounded-lg overflow-hidden mb-3 bg-[#F1EFE8] relative" style={{ aspectRatio: '16/9' }}>
+                            <img
+                              src={activeSlide.generatedImage.url}
+                              alt="Imagen generada"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-2 right-2">
+                              <span
+                                className="rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase text-white"
+                                style={{ backgroundColor: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)' }}
+                              >
+                                {RECRAFT_STYLES.find((s) => s.id === activeSlide.generatedImage?.style)?.emoji}{' '}
+                                Recraft v3
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Prompt used */}
+                          <details className="mb-3">
+                            <summary className="text-[10px] text-[#9B9895] cursor-pointer select-none hover:text-[#6B6866] transition-colors">
+                              💡 Ver prompt utilizado
+                            </summary>
+                            <p className="mt-1.5 rounded bg-[#F1EFE8] p-2.5 text-[10px] text-[#6B6866] leading-relaxed italic">
+                              {activeSlide.generatedImage.prompt}
+                            </p>
+                          </details>
+
+                          {/* Actions */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleGenerateImage(activeSlide.generatedImage?.style ?? selectedStyle)}
+                              disabled={generatingImageFor === activeSlideIndex}
+                              className="flex-1 rounded-lg border border-[#D1CCBF] py-2 text-[11px] font-semibold text-[#444441] hover:bg-[#F1EFE8] disabled:opacity-50 transition-colors"
+                            >
+                              {generatingImageFor === activeSlideIndex ? '⏳ Generando...' : '↺ Regenerar'}
+                            </button>
+                            <button
+                              onClick={handleRemoveGeneratedImage}
+                              className="rounded-lg border border-[#FAECE7] px-3 py-2 text-[11px] font-semibold text-[#E24B4A] hover:bg-[#FAECE7] transition-colors"
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* ── Generator form ── */
+                        <div>
+                          {/* Style selector */}
+                          <p className="text-[10px] text-[#9B9895] uppercase tracking-wider mb-2">Estilo visual</p>
+                          <div className="flex flex-col gap-2 mb-4">
+                            {RECRAFT_STYLES.map((s) => (
+                              <button
+                                key={s.id}
+                                onClick={() => setSelectedStyle(s.id)}
+                                className={`flex items-center gap-3 rounded-lg border-2 px-3 py-2.5 text-left transition-colors ${
+                                  selectedStyle === s.id
+                                    ? 'border-[#6B3FA0] bg-[#EEEDFE]'
+                                    : 'border-[#E5E2DA] bg-white hover:border-[#D1CCBF]'
+                                }`}
+                              >
+                                <span className="text-xl flex-shrink-0">{s.emoji}</span>
+                                <div>
+                                  <div className="text-[12px] font-semibold text-[#1A1A18]">{s.label}</div>
+                                  <div className="text-[10px] text-[#9B9895]">{s.desc}</div>
+                                </div>
+                                {selectedStyle === s.id && (
+                                  <span className="ml-auto text-[#6B3FA0] text-[12px]">✓</span>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Context hint */}
+                          <div className="rounded-lg bg-[#EEEDFE] px-3 py-2 mb-3">
+                            <p className="text-[10px] text-[#3C3489] leading-relaxed">
+                              <span className="font-semibold">Contexto detectado:</span>{' '}
+                              {activeSlide.emotion} · intensidad {activeSlide.intensity}/10
+                              {state.palette && ' · paleta de colores aplicada'}
+                              {activeSlide.graphicSuggestion && ` · ${activeSlide.graphicSuggestion.title}`}
+                            </p>
+                          </div>
+
+                          {/* Error */}
+                          {imageError && (
+                            <div className="mb-3 rounded-lg bg-[#FAECE7] px-3 py-2">
+                              <p className="text-[11px] text-[#E24B4A]">⚠ {imageError}</p>
+                            </div>
+                          )}
+
+                          {/* Generate button */}
+                          <button
+                            onClick={() => handleGenerateImage(selectedStyle)}
+                            disabled={generatingImageFor === activeSlideIndex}
+                            className="w-full rounded-lg py-3 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                            style={{ background: generatingImageFor === activeSlideIndex ? '#9B9895' : 'linear-gradient(135deg, #6B3FA0 0%, #185FA5 100%)' }}
+                          >
+                            {generatingImageFor === activeSlideIndex ? (
+                              <>
+                                <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round"/>
+                                </svg>
+                                Claude está redactando el prompt...
+                              </>
+                            ) : (
+                              <>✨ Generar imagen con Recraft</>
+                            )}
+                          </button>
+                          <p className="mt-2 text-center text-[10px] text-[#B8B4AA]">
+                            Claude genera un prompt optimizado · Recraft v3 crea la imagen
+                          </p>
                         </div>
                       )}
                     </SectionCard>

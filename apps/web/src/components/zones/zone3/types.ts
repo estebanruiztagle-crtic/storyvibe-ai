@@ -39,6 +39,17 @@ export interface UploadedAsset {
   size: number
 }
 
+export interface GeneratedImage {
+  url: string
+  prompt: string
+  style: RecraftStyle
+}
+
+export type RecraftStyle =
+  | 'realistic_image'
+  | 'digital_illustration'
+  | 'vector_illustration'
+
 export interface Zone3Slide {
   slide: number
   label: string
@@ -49,6 +60,7 @@ export interface Zone3Slide {
   graphicSuggestion?: GraphicSuggestion
   useGraphic: boolean
   uploadedAsset?: UploadedAsset
+  generatedImage?: GeneratedImage
   approved: boolean
 }
 
