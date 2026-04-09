@@ -13,19 +13,14 @@ import { zone1ShapeUtil } from './shapes/Zone1Shape'
 import { Zone2AShapeUtil } from './shapes/Zone2AShape'
 import { Zone2BShapeUtil } from './shapes/Zone2BShape'
 import { EmotionalCurveShapeUtil } from './shapes/EmotionalCurveShape'
-import { act3ShapeUtil } from './shapes/Act3Shape'
 import { Zone3ShapeUtil } from './shapes/Zone3Shape'
 import { ZonePanelProvider, useZonePanel } from '@/lib/zone-panel-context'
 import Zone1Panel from '../zones/zone1/Zone1Panel'
 import Zone2Panel from '../zones/zone2/Zone2Panel'
-import Act3Panel from '../zones/act3/Act3Panel'
 import Zone3Panel from '../zones/zone3/Zone3Panel'
 import type { TLZone1Shape } from './shapes/Zone1Shape'
 import type { TLZone2AShape } from './shapes/Zone2AShape'
 import type { TLZone2BShape } from './shapes/Zone2BShape'
-import type { Act3State } from '../zones/act3/types'
-import { EMPTY_ACT3 } from '../zones/act3/types'
-import type { TLAct3Shape } from './shapes/Act3Shape'
 import type { TLZone3Shape } from './shapes/Zone3Shape'
 import type { Zone3State } from '../zones/zone3/types'
 import { EMPTY_ZONE3 } from '../zones/zone3/types'
@@ -50,7 +45,6 @@ const customShapeUtils = [
   Zone2AShapeUtil,
   Zone2BShapeUtil,
   EmotionalCurveShapeUtil,
-  act3ShapeUtil,
   Zone3ShapeUtil,
 ]
 
@@ -190,41 +184,6 @@ function PanelOverlay() {
         initialState={initialState}
         zone1ContextJson={z1Shape?.props.contextJson ?? ''}
         onStateUpdate={handleStateUpdate}
-        onClose={closePanel}
-      />
-    )
-  }
-
-  // ── Act 3 ────────────────────────────────────────────────────────────────────
-  if (panel.type === 'act3') {
-    const act3Shape = shape as TLAct3Shape
-    const initialState: Act3State = act3Shape.props.dataJson
-      ? (() => { try { return JSON.parse(act3Shape.props.dataJson) as Act3State } catch { return EMPTY_ACT3 } })()
-      : EMPTY_ACT3
-
-    const allShapes = editor.getCurrentPageShapes()
-    const z1Shape = allShapes.find((s) => s.type === 'zone1') as TLZone1Shape | undefined
-    const z2aShape = allShapes.find((s) => s.type === 'zone2a') as TLZone2AShape | undefined
-
-    const handleAct3Update = (newState: Act3State) => {
-      editor.updateShape<TLAct3Shape>({
-        id: act3Shape.id, type: 'act3',
-        props: {
-          dataJson: JSON.stringify(newState),
-          status: newState.status,
-          slideCount: newState.slides.length,
-          paletteId: newState.lookAndFeel.paletteId,
-        },
-      })
-    }
-
-    return (
-      <Act3Panel
-        shapeId={panel.shapeId}
-        initialState={initialState}
-        zone1ContextJson={z1Shape?.props.contextJson ?? ''}
-        zone2DataJson={z2aShape?.props.dataJson ?? ''}
-        onStateUpdate={handleAct3Update}
         onClose={closePanel}
       />
     )
@@ -428,50 +387,6 @@ function CanvasAutoFlow({ editor: _editor }: { editor: Editor | null }) {
   return null
 }
 
-// ─── CanvasAutoRecovery — creates Act3 if Zone2 is approved but Act3 is missing ─
-function CanvasAutoRecovery({ editor }: { editor: Editor | null }) {
-  const { openPanel } = useZonePanel()
-
-  useEffect(() => {
-    if (!editor) return
-    // Wait for tldraw to finish loading persisted state
-    const timer = setTimeout(() => {
-      const shapes = editor.getCurrentPageShapes()
-      const z2aShape = shapes.find((s) => s.type === 'zone2a') as TLZone2AShape | undefined
-      if (!z2aShape?.props.dataJson) return
-      if (shapes.some((s) => s.type === 'act3')) return // Act3 already exists
-
-      let zone2State: Zone2State
-      try { zone2State = JSON.parse(z2aShape.props.dataJson) as Zone2State }
-      catch { return }
-
-      if (zone2State.curveStatus !== 'approved') return
-
-      // Zone2 approved but Act3 missing — recreate it
-      const anchor = shapes.find((s) => s.type === 'zone2b') ?? shapes.find((s) => s.type === 'zone2a')
-      if (!anchor) return
-
-      editor.run(() => {
-        editor.createShape<TLAct3Shape>({
-          type: 'act3',
-          x: anchor.x + (anchor.props as { w: number }).w + 40,
-          y: anchor.y,
-          props: { w: 700, h: 360, presentationId: 'default', status: 'empty', slideCount: 0, paletteId: 'midnight', dataJson: '' },
-        })
-        editor.zoomToFit({ animation: { duration: 500 } })
-      }, { history: 'ignore' })
-
-      setTimeout(() => {
-        const act3Shape = editor.getCurrentPageShapes().find((s) => s.type === 'act3') as TLAct3Shape | undefined
-        if (act3Shape) openPanel('act3', act3Shape.id)
-      }, 100)
-    }, 600)
-
-    return () => clearTimeout(timer)
-  }, [editor, openPanel])
-
-  return null
-}
 
 // ─── EmptyCanvasOverlay — shown when no zone1 exists yet ─────────────────────
 function EmptyCanvasOverlay({ editor }: { editor: Editor | null }) {
@@ -593,7 +508,6 @@ export default function StoryVibeCanvas() {
             <EditorCapture onEditor={stableSetEditor} />
           </Tldraw>
           <CanvasAutoFlow editor={editor} />
-          <CanvasAutoRecovery editor={editor} />
           {/* Portals to body — escape tldraw's CSS transform stacking context */}
           {typeof document !== 'undefined' && createPortal(<PanelOverlay />, document.body)}
           {typeof document !== 'undefined' && <ResetButton />}

@@ -12,6 +12,8 @@ import type {
 } from './types'
 import { EMPTY_ZONE3 } from './types'
 import SlidePreview, { autoLayout, LAYOUT_META } from './SlideLayouts'
+import { generateZone3Pptx } from './exportPptx'
+import { generateZone3Pdf  } from './exportPdf'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface Zone3PanelProps {
@@ -191,6 +193,7 @@ export default function Zone3Panel({
   const [generatingImageFor, setGenImgFor]    = useState<number | null>(null)
   const [selectedStyle, setSelectedStyle]     = useState<RecraftStyle>('digital_illustration')
   const [imageError, setImageError]           = useState<string | null>(null)
+  const [isExportingPptx, setIsExportingPptx] = useState(false)
   const [isGenTitle, setIsGenTitle]           = useState(false)
   const [isEditingTitle, setIsEditingTitle]   = useState(false)
   const [editingTitleValue, setEditingTitleValue] = useState('')
@@ -1184,6 +1187,49 @@ export default function Zone3Panel({
             )}
           </>
         )}
+      </div>
+
+      {/* ── Export footer ─────────────────────────────────────────────────── */}
+      <div className="flex-shrink-0 border-t border-[#E5E2DA] bg-[#FAFAF8] px-5 py-3 flex items-center gap-3">
+        <span className="text-[11px] font-semibold text-[#6B6866] mr-auto">Exportar</span>
+
+        {/* PPTX */}
+        <button
+          onClick={async () => {
+            setIsExportingPptx(true)
+            try {
+              await generateZone3Pptx(state, generatedTitle || undefined, zone1ContextJson)
+            } catch (e) {
+              console.error('PPTX export error:', e)
+            } finally {
+              setIsExportingPptx(false)
+            }
+          }}
+          disabled={isExportingPptx || state.slides.length === 0}
+          className="flex items-center gap-1.5 rounded-lg bg-[#1A4A8A] px-4 py-2 text-[11px] font-semibold text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+          title={state.slides.length === 0 ? 'Primero aprueba la curva emocional en Zona 2' : 'Exportar láminas como PowerPoint'}
+        >
+          {isExportingPptx ? (
+            <>
+              <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round"/>
+              </svg>
+              Generando...
+            </>
+          ) : (
+            <>⬇ PPTX</>
+          )}
+        </button>
+
+        {/* PDF report */}
+        <button
+          onClick={() => generateZone3Pdf(state, generatedTitle || undefined, zone1ContextJson, zone2DataJson)}
+          disabled={state.slides.length === 0 && !state.palette}
+          className="flex items-center gap-1.5 rounded-lg bg-[#C0392B] px-4 py-2 text-[11px] font-semibold text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+          title="Exportar reporte completo como PDF"
+        >
+          ⬇ PDF
+        </button>
       </div>
     </div>
   )

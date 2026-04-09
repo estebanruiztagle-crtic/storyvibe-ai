@@ -9,7 +9,6 @@ import { zone2Router } from './routes/zones/zone2'
 import { zone3Router } from './routes/zones/zone3'
 import { zone4Router } from './routes/zones/zone4'
 import zone5Router from './routes/zones/zone5'
-import { act3Router } from './routes/act3'
 
 // Load .env from the api package root regardless of where the process was started
 const dotenvPath = path.resolve(__dirname, '../.env')
@@ -46,7 +45,6 @@ app.use('/api/v1/zones/zone2', zone2Router)
 app.use('/api/v1/zones/zone3', zone3Router)
 app.use('/api/v1/zones/zone4', zone4Router)
 app.use('/api/v1/zones/zone5', zone5Router)
-app.use('/api/v1/act3', act3Router)
 
 // 404 handler
 app.use((_req, res) => {
