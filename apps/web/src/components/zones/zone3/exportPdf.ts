@@ -1,7 +1,7 @@
 // exportPdf.ts — Generates a printable PDF report from Zone3State + context
 // Uses a hidden <iframe> with print-ready HTML and triggers window.print().
 
-import type { Zone3State } from './types'
+import type { Zone3State, ColorSwatch } from './types'
 
 interface Zone1Context {
   presentationName?: string
@@ -20,8 +20,6 @@ interface Zone2Data {
 function escHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
-
-import type { ColorSwatch } from './types'
 
 function paletteBar(swatches: ColorSwatch[]): string {
   return swatches
