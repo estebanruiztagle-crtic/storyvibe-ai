@@ -406,7 +406,9 @@ export function generateZone3Pdf(
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    @page { size: A4; margin: 18mm 20mm 18mm 20mm; }
+    /* Wrapper carries the margins — unaffected by browser print margin settings */
+    #report-body { padding: 18mm 20mm; max-width: 210mm; margin: 0 auto; }
+    @page { size: A4; margin: 0; }
     @media print { .no-print { display:none!important; } }
     h1,h2,h3,p { margin: 0; }
     table { border-collapse: collapse; width: 100%; }
@@ -414,6 +416,7 @@ export function generateZone3Pdf(
   </style>
 </head>
 <body>
+<div id="report-body">
 
 <!-- ══ COVER ══════════════════════════════════════════════════════════════════ -->
 <div style="min-height:220px;padding:48px 40px 36px;background:${primaryC};border-radius:0 0 16px 16px;margin-bottom:36px;">
@@ -484,6 +487,7 @@ ${cp.length > 0 ? `
   <span>${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
 </div>
 
+</div>
 </body>
 </html>`
 
