@@ -1223,9 +1223,15 @@ export default function Zone3Panel({
 
         {/* PDF report */}
         <button
-          onClick={() => generateZone3Pdf(state, generatedTitle || undefined, zone1ContextJson, zone2DataJson)}
-          disabled={state.slides.length === 0 && !state.palette}
-          className="flex items-center gap-1.5 rounded-lg bg-[#C0392B] px-4 py-2 text-[11px] font-semibold text-white hover:opacity-90 disabled:opacity-40 transition-opacity"
+          onClick={() => {
+            try {
+              generateZone3Pdf(state, generatedTitle || undefined, zone1ContextJson, zone2DataJson)
+            } catch (e) {
+              console.error('PDF export error:', e)
+              alert('Error al generar el PDF. Revisa la consola del navegador.')
+            }
+          }}
+          className="flex items-center gap-1.5 rounded-lg bg-[#C0392B] px-4 py-2 text-[11px] font-semibold text-white hover:opacity-90 transition-opacity"
           title="Exportar reporte completo como PDF"
         >
           ⬇ PDF
