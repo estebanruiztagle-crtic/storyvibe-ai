@@ -19,6 +19,7 @@ interface Zone3PanelProps {
   curvePointsJson?: string
   zone2DataJson?: string
   onStateUpdate: (state: Zone3State) => void
+  onTitleUpdate?: (title: string) => void
   onAdvanceToZone4?: () => void
   onClose: () => void
 }
@@ -171,6 +172,7 @@ export default function Zone3Panel({
   curvePointsJson,
   zone2DataJson,
   onStateUpdate,
+  onTitleUpdate,
   onAdvanceToZone4,
   onClose,
 }: Zone3PanelProps) {
@@ -187,6 +189,13 @@ export default function Zone3Panel({
   const [generatingImageFor, setGenImgFor]    = useState<number | null>(null)
   const [selectedStyle, setSelectedStyle]     = useState<RecraftStyle>('digital_illustration')
   const [imageError, setImageError]           = useState<string | null>(null)
+  const [isGenTitle, setIsGenTitle]           = useState(false)
+  const [generatedTitle, setGeneratedTitle]   = useState<string>(() => {
+    try {
+      const ctx = zone1ContextJson ? JSON.parse(zone1ContextJson) as { presentationName?: string } : {}
+      return ctx.presentationName ?? ''
+    } catch { return '' }
+  })
   const fileInputRef                          = useRef<HTMLInputElement>(null)
 
   const activeSlide = state.slides[activeSlideIndex]
@@ -209,6 +218,29 @@ export default function Zone3Panel({
       return { ...prev, slides }
     })
   }, [updateState, activeSlideIndex])
+
+  // ── Generate title ────────────────────────────────────────────────────────
+  const handleGenerateTitle = useCallback(async () => {
+    setIsGenTitle(true)
+    try {
+      const zone1Context = zone1ContextJson ? JSON.parse(zone1ContextJson) : {}
+      const zone2Data    = zone2DataJson    ? JSON.parse(zone2DataJson)    : {}
+      const res  = await fetch(`${API_BASE}/api/v1/zones/zone3/generate-title`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ zone1Context, zone2Data }),
+      })
+      const data = await res.json() as { success: boolean; title?: string; error?: string }
+      if (data.success && data.title) {
+        setGeneratedTitle(data.title)
+        onTitleUpdate?.(data.title)
+      }
+    } catch (err) {
+      console.error('generate-title error:', err)
+    } finally {
+      setIsGenTitle(false)
+    }
+  }, [zone1ContextJson, zone2DataJson, onTitleUpdate])
 
   // ── Generate palette ───────────────────────────────────────────────────────
   const handleGeneratePalette = useCallback(async () => {
@@ -486,6 +518,66 @@ export default function Zone3Panel({
         {/* ══ PALETTE TAB ══════════════════════════════════════════════════ */}
         {activeTab === 'palette' && (
           <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5">
+
+            {/* ── Presentation title ──────────────────────────────────── */}
+            <SectionCard title="Título de la presentación">
+              {generatedTitle ? (
+                <div>
+                  <div className="rounded-lg bg-[#F1EFE8] px-4 py-3 mb-3 flex items-start justify-between gap-3">
+                    <p
+                      className="text-[16px] font-semibold text-[#1A1A18] leading-snug flex-1"
+                      style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic' }}
+                    >
+                      {generatedTitle}
+                    </p>
+                    <button
+                      onClick={() => {
+                        const edited = window.prompt('Editar título:', generatedTitle)
+                        if (edited && edited.trim()) {
+                          setGeneratedTitle(edited.trim())
+                          onTitleUpdate?.(edited.trim())
+                        }
+                      }}
+                      className="flex-shrink-0 text-[10px] text-[#9B9895] hover:text-[#444441] transition-colors"
+                      title="Editar título"
+                    >
+                      ✏
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleGenerateTitle}
+                    disabled={isGenTitle}
+                    className="w-full rounded-lg border border-[#D1CCBF] py-2 text-[11px] font-semibold text-[#444441] hover:bg-[#F1EFE8] disabled:opacity-50 transition-colors"
+                  >
+                    {isGenTitle ? 'Generando...' : '↺ Regenerar título'}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="py-5 text-center mb-3">
+                    <div className="text-2xl mb-2">🎯</div>
+                    <p className="text-[12px] text-[#9B9895] mb-1">Sin título aún</p>
+                    <p className="text-[11px] text-[#B8B4AA]">
+                      Claude genera un título basado en tus tópicos y objetivo
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleGenerateTitle}
+                    disabled={isGenTitle}
+                    className="w-full rounded-lg bg-[#1A1A18] py-2.5 text-[12px] font-semibold text-white transition-opacity hover:opacity-85 disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isGenTitle ? (
+                      <>
+                        <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round"/>
+                        </svg>
+                        Generando título...
+                      </>
+                    ) : '✦ Generar título con IA'}
+                  </button>
+                </div>
+              )}
+            </SectionCard>
 
             {/* Generated palette */}
             <SectionCard title="Paleta de colores generada por IA">

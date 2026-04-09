@@ -190,6 +190,54 @@ Genera exactamente una sugerencia por cada lámina listada.`,
   }
 })
 
+// ─── POST /generate-title ─────────────────────────────────────────────────────
+router.post('/generate-title', async (req: Request, res: Response) => {
+  try {
+    const { zone1Context, zone2Data } = req.body as {
+      zone1Context: Record<string, unknown>
+      zone2Data: Record<string, unknown>
+    }
+
+    const response = await getAnthropic().messages.create({
+      model: 'claude-sonnet-4-5-20250929',
+      max_tokens: 80,
+      system: `Eres un experto en copywriting para presentaciones corporativas de alto impacto.
+Genera un título corto, poderoso y memorable para una presentación de negocios.
+
+Reglas:
+- Entre 3 y 8 palabras
+- En el mismo idioma del contexto (si el contexto es en español, el título en español)
+- Específico al sector, audiencia y objetivo — nada genérico
+- Transmite la transformación o insight central de la presentación
+- Sin signos de puntuación al final
+- Responde ÚNICAMENTE con el título, sin comillas ni explicación`,
+      messages: [
+        {
+          role: 'user',
+          content: `Genera el título para esta presentación.
+
+Contexto diagnóstico (Zona 1):
+${JSON.stringify(zone1Context, null, 2)}
+
+Arquitectura narrativa (Zona 2):
+${JSON.stringify(zone2Data, null, 2)}`,
+        },
+      ],
+    })
+
+    const firstBlock = response.content[0]
+    const title = firstBlock?.type === 'text' ? firstBlock.text.trim() : ''
+    if (!title) {
+      res.status(500).json({ success: false, error: 'No se pudo generar el título' })
+      return
+    }
+    res.json({ success: true, title })
+  } catch (error) {
+    console.error('Zone3 generate-title error:', error)
+    res.status(500).json({ success: false, error: 'Error al generar título' })
+  }
+})
+
 // ─── POST /generate-image ─────────────────────────────────────────────────────
 router.post('/generate-image', async (req: Request, res: Response) => {
   const recraftApiKey = process.env.RECRAFT_API_KEY
