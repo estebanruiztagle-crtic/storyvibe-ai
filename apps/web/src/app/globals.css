@@ -57,3 +57,20 @@
     @apply bg-background text-foreground;
   }
 }
+.tl-container { background: transparent !important; }
+.tl-canvas { background: transparent !important; }
+.tl-theme__light, .tl-theme__dark {
+  --color-background: transparent !important;
+  --color-grid: rgba(0,0,0,0.05) !important;
+}
+
+.tl-theme__light, .tl-theme__dark, .tl-container {
+  --color-background: transparent !important;
+  --color-grid: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+.tl-background {
+  fill: transparent !important;
+}
+

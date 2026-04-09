@@ -19,7 +19,15 @@ const StoryVibeCanvas = dynamic(
 
 export default function CanvasPage() {
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div 
+      className="h-screen w-screen overflow-hidden"
+      style={{
+        backgroundImage: "url('/fondo-canvas.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
       <StoryVibeCanvas />
     </div>
   )

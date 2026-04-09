@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import type {
   Zone3State,
   Zone3Slide,
@@ -63,7 +63,7 @@ const RECRAFT_STYLES: { id: RecraftStyle; label: string; emoji: string; desc: st
   { id: 'vector_illustration',  label: 'Vector / Infografía', emoji: '🔷', desc: 'Estilo limpio, perfecto para datos y procesos' },
 ]
 
-type ActiveTab = 'palette' | 'slides'
+type ActiveTab = 'palette' | 'slides' | 'presentation'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function typeColor(type: PointType): string {
@@ -194,6 +194,10 @@ export default function Zone3Panel({
   const [selectedStyle, setSelectedStyle]     = useState<RecraftStyle>('digital_illustration')
   const [imageError, setImageError]           = useState<string | null>(null)
   const [isExportingPptx, setIsExportingPptx] = useState(false)
+  const [isFullscreen, setIsFullscreen]       = useState(false)
+  const [presentSlide, setPresentSlide]       = useState(0)
+  const slideRefs                             = useRef<(HTMLDivElement | null)[]>([])
+  const presentationRef                       = useRef<HTMLDivElement>(null)
   const [isGenTitle, setIsGenTitle]           = useState(false)
   const [isEditingTitle, setIsEditingTitle]   = useState(false)
   const [editingTitleValue, setEditingTitleValue] = useState('')
@@ -455,6 +459,22 @@ export default function Zone3Panel({
     updateSlide((s) => ({ ...s, approved: !s.approved }))
   }, [updateSlide])
 
+  // ── Keyboard navigation for presentation tab ──────────────────────────────
+  useEffect(() => {
+    if (activeTab !== 'presentation' && !isFullscreen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        setPresentSlide((i) => Math.min(state.slides.length - 1, i + 1))
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        setPresentSlide((i) => Math.max(0, i - 1))
+      } else if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [activeTab, isFullscreen, state.slides.length])
+
   // ── Derived ────────────────────────────────────────────────────────────────
   const approvedCount = state.slides.filter((s) => s.approved).length
   const totalSlides   = state.slides.length
@@ -468,35 +488,81 @@ export default function Zone3Panel({
       style={{ width: 900, zIndex: 9999, fontFamily: "'Inter', sans-serif" }}
     >
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between border-b border-[#E5E2DA] bg-white px-6 py-3 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] text-[#9B9895] tracking-widest uppercase">zona 3</span>
-          <span className="text-[#D1CCBF]">·</span>
-          <span
-            className="text-[13px] font-medium text-[#1A1A18] italic"
-            style={{ fontFamily: "'Fraunces', serif" }}
-          >
-            diseño visual
-          </span>
+      <div className="flex flex-col border-b border-[#E5E2DA] bg-white px-6 pt-3 pb-2 flex-shrink-0 gap-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-[#9B9895] tracking-widest uppercase">zona 3</span>
+            <span className="text-[#D1CCBF]">·</span>
+            <span className="text-[13px] font-medium text-[#1A1A18] italic" style={{ fontFamily: "'Fraunces', serif" }}>
+              diseño visual
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {onAdvanceToZone4 && (
+              <button
+                onClick={onAdvanceToZone4}
+                className="flex items-center gap-1.5 rounded-lg bg-[#0F6E56] px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 8h10M9 4l4 4-4 4" />
+                </svg>
+                Avanzar Zona 4
+              </button>
+            )}
+            <button onClick={onClose} className="rounded border border-[#D1CCBF] px-3 py-1.5 text-[11px] text-[#6B6866] hover:bg-[#F1EFE8] transition-colors">
+              cerrar ×
+            </button>
+          </div>
         </div>
+
+        {/* ── Inline title editor ────────────────────────────────────────── */}
         <div className="flex items-center gap-2">
-          {onAdvanceToZone4 && (
+          {isEditingTitle ? (
+            <div className="flex flex-1 items-center gap-2">
+              <input
+                autoFocus
+                value={editingTitleValue}
+                onChange={(e) => setEditingTitleValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const v = editingTitleValue.trim()
+                    if (v) { setGeneratedTitle(v); onTitleUpdate?.(v) }
+                    setIsEditingTitle(false)
+                  }
+                  if (e.key === 'Escape') setIsEditingTitle(false)
+                }}
+                placeholder="Título de la presentación..."
+                className="flex-1 rounded-md border border-[#C8C4BB] bg-[#F9F8F5] px-3 py-1.5 text-[14px] font-semibold text-[#1A1A18] outline-none focus:border-[#185FA5]"
+                style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic' }}
+              />
+              <button
+                onClick={() => {
+                  const v = editingTitleValue.trim()
+                  if (v) { setGeneratedTitle(v); onTitleUpdate?.(v) }
+                  setIsEditingTitle(false)
+                }}
+                className="rounded-md bg-[#1A1A18] px-3 py-1.5 text-[11px] font-semibold text-white hover:opacity-85 transition-opacity"
+              >Guardar</button>
+              <button
+                onClick={() => setIsEditingTitle(false)}
+                className="rounded-md border border-[#D1CCBF] px-3 py-1.5 text-[11px] text-[#6B6866] hover:bg-[#F1EFE8] transition-colors"
+              >✕</button>
+            </div>
+          ) : (
             <button
-              onClick={onAdvanceToZone4}
-              className="flex items-center gap-1.5 rounded-lg bg-[#0F6E56] px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm transition-opacity hover:opacity-90 cursor-pointer"
+              onClick={() => { setEditingTitleValue(generatedTitle); setIsEditingTitle(true) }}
+              className="flex items-center gap-2 rounded-md px-2 py-1 text-left hover:bg-[#F1EFE8] transition-colors group"
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 8h10M9 4l4 4-4 4" />
-              </svg>
-              Avanzar Zona 4
+              {generatedTitle ? (
+                <span className="text-[15px] font-semibold text-[#1A1A18] leading-tight" style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic' }}>
+                  {generatedTitle}
+                </span>
+              ) : (
+                <span className="text-[13px] text-[#B8B4AA] italic">Sin título — clic para agregar</span>
+              )}
+              <span className="text-[10px] text-[#C8C4BB] group-hover:text-[#9B9895] transition-colors">✏</span>
             </button>
           )}
-          <button
-            onClick={onClose}
-            className="rounded border border-[#D1CCBF] px-3 py-1.5 text-[11px] text-[#6B6866] hover:bg-[#F1EFE8] transition-colors"
-          >
-            cerrar ×
-          </button>
         </div>
       </div>
 
@@ -504,8 +570,9 @@ export default function Zone3Panel({
       <div className="flex border-b border-[#E5E2DA] bg-white flex-shrink-0">
         {(
           [
-            { id: 'palette' as const, label: 'Paleta de colores', done: state.paletteGenerated },
-            { id: 'slides'  as const, label: 'Assets por lámina', count: `${approvedCount}/${totalSlides}` },
+            { id: 'palette'      as const, label: 'Paleta',       done: state.paletteGenerated },
+            { id: 'slides'       as const, label: 'Assets',       count: `${approvedCount}/${totalSlides}` },
+            { id: 'presentation' as const, label: 'Presentación', count: totalSlides > 0 ? `${totalSlides}` : undefined },
           ] as Array<{ id: ActiveTab; label: string; done?: boolean; count?: string }>
         ).map(({ id, label, done, count }) => (
           <button
@@ -1187,6 +1254,139 @@ export default function Zone3Panel({
             )}
           </>
         )}
+
+        {/* ══ PRESENTATION TAB ═════════════════════════════════════════════ */}
+        {activeTab === 'presentation' && (
+          <div className="flex-1 flex flex-col overflow-hidden bg-[#111110]">
+            {totalSlides === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <p className="text-[14px] text-[#6B6866]">Sin láminas — completa la curva emocional en Zona 2</p>
+              </div>
+            ) : (
+              <>
+                {/* Slide display */}
+                <div className="flex-1 flex items-center justify-center p-6 relative">
+                  <div
+                    ref={presentationRef}
+                    className="w-full"
+                    style={{ maxWidth: 'calc((100vh - 140px) * 16 / 9)', aspectRatio: '16/9' }}
+                  >
+                    <SlidePreview
+                      slide={state.slides[presentSlide]!}
+                      layout={state.slides[presentSlide]?.selectedLayout ?? autoLayout(state.slides[presentSlide]!)}
+                      swatches={state.palette?.swatches}
+                      containerWidth={800}
+                    />
+                  </div>
+
+                  {/* Fullscreen button */}
+                  <button
+                    onClick={() => setIsFullscreen(true)}
+                    className="absolute top-4 right-4 rounded-lg bg-white/10 px-3 py-2 text-[11px] font-semibold text-white/70 hover:bg-white/20 transition-colors backdrop-blur-sm"
+                    title="Pantalla completa (F)"
+                  >
+                    ⛶ Pantalla completa
+                  </button>
+                </div>
+
+                {/* Thumbnails strip */}
+                <div className="flex-shrink-0 bg-[#1A1A18] px-4 py-3 flex items-center gap-2 overflow-x-auto">
+                  {state.slides.map((slide, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPresentSlide(i)}
+                      className={`flex-shrink-0 rounded overflow-hidden transition-all ${
+                        presentSlide === i
+                          ? 'ring-2 ring-[#185FA5] opacity-100'
+                          : 'opacity-50 hover:opacity-80'
+                      }`}
+                      style={{ width: 96, aspectRatio: '16/9' }}
+                    >
+                      <SlidePreview slide={slide} layout={slide.selectedLayout ?? autoLayout(slide)} swatches={state.palette?.swatches} containerWidth={96} />
+                    </button>
+                  ))}
+                </div>
+
+                {/* Controls bar */}
+                <div className="flex-shrink-0 bg-[#111110] px-6 py-3 flex items-center justify-between">
+                  <button
+                    onClick={() => setPresentSlide((i) => Math.max(0, i - 1))}
+                    disabled={presentSlide === 0}
+                    className="rounded-lg border border-white/20 px-4 py-2 text-[12px] text-white/70 hover:bg-white/10 disabled:opacity-30 transition-colors"
+                  >
+                    ← Anterior
+                  </button>
+                  <span className="text-[12px] text-white/50 tabular-nums">
+                    {presentSlide + 1} / {totalSlides}
+                    {state.slides[presentSlide]?.label && (
+                      <span className="ml-2 text-white/30">— {state.slides[presentSlide]!.label}</span>
+                    )}
+                  </span>
+                  <button
+                    onClick={() => setPresentSlide((i) => Math.min(totalSlides - 1, i + 1))}
+                    disabled={presentSlide === totalSlides - 1}
+                    className="rounded-lg border border-white/20 px-4 py-2 text-[12px] text-white/70 hover:bg-white/10 disabled:opacity-30 transition-colors"
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Fullscreen overlay ──────────────────────────────────────────────── */}
+      {isFullscreen && totalSlides > 0 && (
+        <div
+          className="fixed inset-0 bg-black flex flex-col items-center justify-center"
+          style={{ zIndex: 99999 }}
+          onClick={() => setIsFullscreen(false)}
+        >
+          {/* Slide */}
+          <div
+            style={{ width: '90vw', maxWidth: 'calc(90vh * 16 / 9)', aspectRatio: '16/9' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SlidePreview
+              slide={state.slides[presentSlide]!}
+              layout={state.slides[presentSlide]?.selectedLayout ?? autoLayout(state.slides[presentSlide]!)}
+              swatches={state.palette?.swatches}
+              containerWidth={Math.min(window.innerWidth * 0.9, window.innerHeight * 0.9 * 16 / 9)}
+            />
+          </div>
+          {/* Controls */}
+          <div className="mt-6 flex items-center gap-6">
+            <button
+              onClick={() => setPresentSlide((i) => Math.max(0, i - 1))}
+              disabled={presentSlide === 0}
+              className="rounded-full w-10 h-10 bg-white/10 text-white hover:bg-white/20 disabled:opacity-20 text-xl flex items-center justify-center transition-colors"
+            >‹</button>
+            <span className="text-white/50 text-sm tabular-nums">{presentSlide + 1} / {totalSlides}</span>
+            <button
+              onClick={() => setPresentSlide((i) => Math.min(totalSlides - 1, i + 1))}
+              disabled={presentSlide === totalSlides - 1}
+              className="rounded-full w-10 h-10 bg-white/10 text-white hover:bg-white/20 disabled:opacity-20 text-xl flex items-center justify-center transition-colors"
+            >›</button>
+          </div>
+          <button
+            onClick={() => setIsFullscreen(false)}
+            className="absolute top-4 right-6 text-white/40 hover:text-white text-sm transition-colors"
+          >ESC · cerrar ✕</button>
+        </div>
+      )}
+
+      {/* ── Hidden slide renders (for PPTX pixel-perfect capture) ───────────── */}
+      <div style={{ position: 'fixed', top: -9999, left: -9999, pointerEvents: 'none', zIndex: -1 }}>
+        {state.slides.map((slide, i) => (
+          <div
+            key={i}
+            ref={(el) => { slideRefs.current[i] = el }}
+            style={{ width: 1280, height: 720, overflow: 'hidden' }}
+          >
+            <SlidePreview slide={slide} layout={slide.selectedLayout ?? autoLayout(slide)} swatches={state.palette?.swatches} containerWidth={1280} />
+          </div>
+        ))}
       </div>
 
       {/* ── Export footer ─────────────────────────────────────────────────── */}
@@ -1198,9 +1398,12 @@ export default function Zone3Panel({
           onClick={async () => {
             setIsExportingPptx(true)
             try {
-              await generateZone3Pptx(state, generatedTitle || undefined, zone1ContextJson)
+              const elements = slideRefs.current.filter((el): el is HTMLDivElement => el !== null)
+              if (elements.length === 0) throw new Error('No hay láminas para exportar')
+              await generateZone3Pptx(elements, generatedTitle || undefined)
             } catch (e) {
               console.error('PPTX export error:', e)
+              alert(`Error PPTX: ${e instanceof Error ? e.message : String(e)}`)
             } finally {
               setIsExportingPptx(false)
             }
