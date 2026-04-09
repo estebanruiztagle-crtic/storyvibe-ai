@@ -203,11 +203,13 @@ router.post('/diagnose', async (req: Request, res: Response) => {
       conversationHistory,
       currentContext,
       userMessage,
+      sourceSummary,
     } = req.body as {
       presentationId: string
       conversationHistory: ConversationTurn[]
       currentContext: Zone1Context
       userMessage?: string
+      sourceSummary?: string | null
     }
 
     if (!presentationId) {
@@ -217,6 +219,18 @@ router.post('/diagnose', async (req: Request, res: Response) => {
 
     // Build messages array for Claude
     const messages: Anthropic.MessageParam[] = []
+
+    // If sources were uploaded, inject them as the first context message
+    if (sourceSummary && conversationHistory && conversationHistory.length === 0) {
+      messages.push({
+        role: 'user',
+        content: `Antes de iniciar el diagnóstico, quiero compartirte material de referencia que he subido:\n\n${sourceSummary}\n\nTen en cuenta este material durante toda la conversación para hacer preguntas más precisas y contextualizar mejor la presentación.`,
+      })
+      messages.push({
+        role: 'assistant',
+        content: '{"agentMessage":"Perfecto, he revisado el material que compartiste. Lo tendré en cuenta durante todo el diagnóstico para hacer preguntas más relevantes y contextualizadas.","updatedFields":{},"newRiskFlags":[],"newPropagationRules":[],"nextQuestion":"","nextQuestionContext":"","completeness":0,"conversationComplete":false}',
+      })
+    }
 
     // Add conversation history
     if (conversationHistory && conversationHistory.length > 0) {
@@ -230,13 +244,17 @@ router.post('/diagnose', async (req: Request, res: Response) => {
 
     // Add current user message if provided
     if (userMessage && userMessage.trim()) {
-      messages.push({ role: 'user', content: userMessage })
+      // If sources exist and this isn't the first turn, append a brief reminder
+      const sourceReminder = sourceSummary && conversationHistory && conversationHistory.length > 0
+        ? `\n\n[Recordatorio: el usuario tiene fuentes cargadas con el siguiente contenido:\n${sourceSummary}]`
+        : ''
+      messages.push({ role: 'user', content: userMessage + sourceReminder })
     } else if (messages.length === 0) {
       // First turn — initiate diagnosis
-      messages.push({
-        role: 'user',
-        content: 'Inicia el diagnóstico. Necesito preparar una presentación.',
-      })
+      const initContent = sourceSummary
+        ? `Inicia el diagnóstico. Necesito preparar una presentación. Ya he subido material de referencia:\n\n${sourceSummary}`
+        : 'Inicia el diagnóstico. Necesito preparar una presentación.'
+      messages.push({ role: 'user', content: initContent })
     }
 
     // Ensure the last message is from the user (Claude requires alternating turns ending with user)
