@@ -8,8 +8,10 @@ import type {
   PointType,
   ColorSwatch,
   RecraftStyle,
+  LayoutId,
 } from './types'
 import { EMPTY_ZONE3 } from './types'
+import SlidePreview, { autoLayout, LAYOUT_META } from './SlideLayouts'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface Zone3PanelProps {
@@ -374,6 +376,11 @@ export default function Zone3Panel({
   const handleRemoveGeneratedImage = useCallback(() => {
     updateSlide((s) => ({ ...s, generatedImage: undefined }))
     setImageError(null)
+  }, [updateSlide])
+
+  // ── Layout selection ──────────────────────────────────────────────────────
+  const handleSelectLayout = useCallback((layout: LayoutId) => {
+    updateSlide((s) => ({ ...s, selectedLayout: layout }))
   }, [updateSlide])
 
   // ── Toggle graphic use ─────────────────────────────────────────────────────
@@ -760,6 +767,49 @@ export default function Zone3Panel({
                         {activeSlide.fullLabel}
                       </h2>
                     </div>
+
+                    {/* ── Slide Preview ────────────────────────────────────── */}
+                    {(() => {
+                      const currentLayout = activeSlide.selectedLayout ?? autoLayout(activeSlide)
+                      return (
+                        <div>
+                          {/* Preview */}
+                          <SlidePreview
+                            slide={activeSlide}
+                            layout={currentLayout}
+                            swatches={state.palette?.swatches}
+                            containerWidth={630}
+                          />
+                          {/* Layout picker */}
+                          <div className="mt-3">
+                            <p className="text-[10px] text-[#9B9895] uppercase tracking-wider mb-2">Layout</p>
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {(Object.keys(LAYOUT_META) as LayoutId[]).map((lid) => {
+                                const meta = LAYOUT_META[lid]
+                                const isActive = currentLayout === lid
+                                return (
+                                  <button
+                                    key={lid}
+                                    onClick={() => handleSelectLayout(lid)}
+                                    title={meta.desc}
+                                    className={`flex flex-col items-center gap-1 rounded-lg border-2 py-2 px-1 transition-colors text-center ${
+                                      isActive
+                                        ? 'border-[#6B3FA0] bg-[#EEEDFE]'
+                                        : 'border-[#E5E2DA] bg-white hover:border-[#D1CCBF]'
+                                    }`}
+                                  >
+                                    <span className="text-base leading-none">{meta.emoji}</span>
+                                    <span className={`text-[9px] font-semibold leading-tight ${isActive ? 'text-[#6B3FA0]' : 'text-[#6B6866]'}`}>
+                                      {meta.label}
+                                    </span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
 
                     {/* ── Graphic suggestion ──────────────────────────────── */}
                     <SectionCard title="Gráfico o infografía sugerida">

@@ -50,6 +50,16 @@ export type RecraftStyle =
   | 'digital_illustration'
   | 'vector_illustration'
 
+export type LayoutId =
+  | 'hero'
+  | 'split'
+  | 'statement'
+  | 'metrics'
+  | 'three-col'
+  | 'before-after'
+  | 'timeline'
+  | 'image-text'
+
 export interface Zone3Slide {
   slide: number
   label: string
@@ -61,6 +71,7 @@ export interface Zone3Slide {
   useGraphic: boolean
   uploadedAsset?: UploadedAsset
   generatedImage?: GeneratedImage
+  selectedLayout?: LayoutId
   approved: boolean
 }
 
