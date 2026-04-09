@@ -192,6 +192,8 @@ export default function Zone3Panel({
   const [selectedStyle, setSelectedStyle]     = useState<RecraftStyle>('digital_illustration')
   const [imageError, setImageError]           = useState<string | null>(null)
   const [isGenTitle, setIsGenTitle]           = useState(false)
+  const [isEditingTitle, setIsEditingTitle]   = useState(false)
+  const [editingTitleValue, setEditingTitleValue] = useState('')
   const [generatedTitle, setGeneratedTitle]   = useState<string>(() => {
     try {
       const ctx = zone1ContextJson ? JSON.parse(zone1ContextJson) as { presentationName?: string } : {}
@@ -530,34 +532,70 @@ export default function Zone3Panel({
             <SectionCard title="Título de la presentación">
               {generatedTitle ? (
                 <div>
-                  <div className="rounded-lg bg-[#F1EFE8] px-4 py-3 mb-3 flex items-start justify-between gap-3">
-                    <p
-                      className="text-[16px] font-semibold text-[#1A1A18] leading-snug flex-1"
-                      style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic' }}
-                    >
-                      {generatedTitle}
-                    </p>
-                    <button
-                      onClick={() => {
-                        const edited = window.prompt('Editar título:', generatedTitle)
-                        if (edited && edited.trim()) {
-                          setGeneratedTitle(edited.trim())
-                          onTitleUpdate?.(edited.trim())
-                        }
-                      }}
-                      className="flex-shrink-0 text-[10px] text-[#9B9895] hover:text-[#444441] transition-colors"
-                      title="Editar título"
-                    >
-                      ✏
-                    </button>
+                  <div className="rounded-lg bg-[#F1EFE8] px-4 py-3 mb-3">
+                    {isEditingTitle ? (
+                      <div className="flex flex-col gap-2">
+                        <input
+                          autoFocus
+                          value={editingTitleValue}
+                          onChange={(e) => setEditingTitleValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              const v = editingTitleValue.trim()
+                              if (v) { setGeneratedTitle(v); onTitleUpdate?.(v) }
+                              setIsEditingTitle(false)
+                            }
+                            if (e.key === 'Escape') setIsEditingTitle(false)
+                          }}
+                          className="w-full rounded-md border border-[#C8C4BB] bg-white px-3 py-2 text-[15px] font-semibold text-[#1A1A18] outline-none focus:border-[#1A1A18]"
+                          style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic' }}
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              const v = editingTitleValue.trim()
+                              if (v) { setGeneratedTitle(v); onTitleUpdate?.(v) }
+                              setIsEditingTitle(false)
+                            }}
+                            className="flex-1 rounded-md bg-[#1A1A18] py-1.5 text-[11px] font-semibold text-white hover:opacity-85 transition-opacity"
+                          >
+                            Guardar
+                          </button>
+                          <button
+                            onClick={() => setIsEditingTitle(false)}
+                            className="flex-1 rounded-md border border-[#D1CCBF] py-1.5 text-[11px] font-semibold text-[#444441] hover:bg-white transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start justify-between gap-3">
+                        <p
+                          className="text-[16px] font-semibold text-[#1A1A18] leading-snug flex-1"
+                          style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic' }}
+                        >
+                          {generatedTitle}
+                        </p>
+                        <button
+                          onClick={() => { setEditingTitleValue(generatedTitle); setIsEditingTitle(true) }}
+                          className="flex-shrink-0 text-[10px] text-[#9B9895] hover:text-[#444441] transition-colors"
+                          title="Editar título"
+                        >
+                          ✏
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <button
-                    onClick={handleGenerateTitle}
-                    disabled={isGenTitle}
-                    className="w-full rounded-lg border border-[#D1CCBF] py-2 text-[11px] font-semibold text-[#444441] hover:bg-[#F1EFE8] disabled:opacity-50 transition-colors"
-                  >
-                    {isGenTitle ? 'Generando...' : '↺ Regenerar título'}
-                  </button>
+                  {!isEditingTitle && (
+                    <button
+                      onClick={handleGenerateTitle}
+                      disabled={isGenTitle}
+                      className="w-full rounded-lg border border-[#D1CCBF] py-2 text-[11px] font-semibold text-[#444441] hover:bg-[#F1EFE8] disabled:opacity-50 transition-colors"
+                    >
+                      {isGenTitle ? 'Generando...' : '↺ Regenerar título'}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div>
