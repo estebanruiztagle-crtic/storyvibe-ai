@@ -17,8 +17,9 @@ interface Zone2Data {
   curvePoints?: Array<{ slide: number; label: string; type: string; emotion: string; intensity: number }>
 }
 
-function escHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+function escHtml(s: string | undefined | null): string {
+  if (!s) return ''
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 function paletteBar(swatches: ColorSwatch[]): string {
@@ -47,8 +48,11 @@ export function generateZone3Pdf(
   const selectedFw = z2.frameworks?.find((f) => f.id === z2.selectedFrameworkId)
 
   // ── Slides HTML ─────────────────────────────────────────────────────────────
-  const slideRows = state.slides.map((sl) => {
-    const typeColor = sl.type === 'peak' ? '#10B981' : sl.type === 'valley' ? '#2563EB' : '#6B7280'
+  const slides = Array.isArray(state.slides) ? state.slides : []
+  const slideRows = slides.map((sl) => {
+    const slType    = sl.type    ?? 'transition'
+    const slEmotion = sl.emotion ?? ''
+    const typeColor = slType === 'peak' ? '#10B981' : slType === 'valley' ? '#2563EB' : '#6B7280'
     const imageHtml = sl.generatedImage?.url
       ? `<img src="${escHtml(sl.generatedImage.url)}" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px;" />`
       : sl.uploadedAsset?.dataUrl && sl.uploadedAsset.fileType === 'image'
@@ -60,11 +64,11 @@ export function generateZone3Pdf(
         <div style="display:flex;align-items:flex-start;gap:16px;">
           <div style="flex:1;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-              <span style="font-size:11px;font-weight:700;color:#FFF;background:${typeColor};border-radius:20px;padding:2px 10px;">${escHtml(sl.type.toUpperCase())}</span>
-              <span style="font-size:11px;color:#6B7280;">Lámina ${sl.slide} · ${escHtml(sl.emotion)} · ${sl.intensity}/10</span>
+              <span style="font-size:11px;font-weight:700;color:#FFF;background:${typeColor};border-radius:20px;padding:2px 10px;">${escHtml(slType.toUpperCase())}</span>
+              <span style="font-size:11px;color:#6B7280;">Lámina ${sl.slide ?? ''} · ${escHtml(slEmotion)} · ${sl.intensity ?? ''}/10</span>
               ${sl.approved ? '<span style="font-size:11px;color:#10B981;font-weight:700;">✓ Aprobada</span>' : ''}
             </div>
-            <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:${primary};line-height:1.3;">${escHtml(sl.fullLabel || sl.label)}</h3>
+            <h3 style="margin:0 0 6px;font-size:16px;font-weight:700;color:${primary};line-height:1.3;">${escHtml(sl.fullLabel ?? sl.label)}</h3>
             ${sl.graphicSuggestion ? `
               <div style="margin-top:8px;padding:10px;background:#F1EFE8;border-radius:8px;">
                 <div style="font-size:11px;font-weight:700;color:${primary};margin-bottom:4px;">${escHtml(sl.graphicSuggestion.title)}</div>
