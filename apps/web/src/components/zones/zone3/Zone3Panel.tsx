@@ -1426,9 +1426,9 @@ export default function Zone3Panel({
 
         {/* PDF report */}
         <button
-          onClick={() => {
+          onClick={async () => {
             try {
-              generateZone3Pdf(state, generatedTitle || undefined, zone1ContextJson, zone2DataJson)
+              await generateZone3Pdf(state, generatedTitle || undefined, zone1ContextJson, zone2DataJson)
             } catch (e) {
               const msg = e instanceof Error ? e.message : String(e)
               console.error('PDF export error:', e)

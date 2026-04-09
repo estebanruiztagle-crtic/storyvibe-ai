@@ -116,12 +116,28 @@ function grid2(...items: string[]): string {
 }
 
 // ─── Main export ───────────────────────────────────────────────────────────────
-export function generateZone3Pdf(
+async function urlToDataUrl(url: string): Promise<string> {
+  try {
+    const res  = await fetch(url)
+    if (!res.ok) return url
+    const blob = await res.blob()
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload  = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return url
+  }
+}
+
+export async function generateZone3Pdf(
   state: Zone3State,
   title?: string,
   zone1ContextJson?: string,
   zone2DataJson?: string,
-): void {
+): Promise<void> {
   let z1: Zone1Context = {}
   let z2: Zone2Data    = {}
   try { z1 = zone1ContextJson ? JSON.parse(zone1ContextJson) : {} } catch { /**/ }
@@ -137,6 +153,19 @@ export function generateZone3Pdf(
   const slides     = Array.isArray(state.slides) ? state.slides : []
   const cp         = Array.isArray(z2.curvePoints) ? z2.curvePoints : []
   const topics     = (z2.topics ?? []).filter(t => t.selected)
+
+  // Pre-fetch Recraft images as base64 so they render in the printed document
+  const imageCache = new Map<string, string>()
+  await Promise.all(
+    slides
+      .filter(sl => sl.generatedImage?.url)
+      .map(async sl => {
+        const url = sl.generatedImage!.url
+        if (!imageCache.has(url)) {
+          imageCache.set(url, await urlToDataUrl(url))
+        }
+      })
+  )
 
   // ── Total duration ────────────────────────────────────────────────────────
   const totalMin   = z1.event?.durationMinutes ?? 0
@@ -325,11 +354,14 @@ export function generateZone3Pdf(
 
   const slideBlocks = slides.map((sl, i) => {
     const point = cp.find(p => p.slide === sl.slide) ?? cp[i]
-    const imageHtml = sl.generatedImage?.url
-      ? `<img src="${esc(sl.generatedImage.url)}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-top:8px;" />`
+    const imgSrc = sl.generatedImage?.url
+      ? (imageCache.get(sl.generatedImage.url) ?? sl.generatedImage.url)
       : sl.uploadedAsset?.dataUrl && sl.uploadedAsset.fileType === 'image'
-        ? `<img src="${esc(sl.uploadedAsset.dataUrl)}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-top:8px;" />`
-        : ''
+        ? sl.uploadedAsset.dataUrl
+        : null
+    const imageHtml = imgSrc
+      ? `<img src="${esc(imgSrc)}" style="width:100%;height:120px;object-fit:cover;border-radius:6px;margin-top:8px;" />`
+      : ''
     const tc = typeColor(sl.type ?? 'transition')
 
     return `
@@ -406,16 +438,26 @@ export function generateZone3Pdf(
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    /* Wrapper carries the margins — unaffected by browser print margin settings */
-    #report-body { padding: 18mm 20mm; max-width: 210mm; margin: 0 auto; }
-    @page { size: A4; margin: 0; }
-    @media print { .no-print { display:none!important; } }
+    /* @page handles margins on every page correctly */
+    @page { size: A4; margin: 16mm 20mm; }
+    /* Screen wrapper for visual centering */
+    #report-body { max-width: 750px; margin: 0 auto; padding: 24px 32px; }
+    @media print {
+      .no-print { display: none !important; }
+      /* Remove screen padding — @page margin takes over */
+      #report-body { padding: 0; max-width: none; }
+    }
     h1,h2,h3,p { margin: 0; }
     table { border-collapse: collapse; width: 100%; }
     td { vertical-align: top; }
   </style>
 </head>
 <body>
+<!-- Print tip — hidden when printing -->
+<div class="no-print" style="position:sticky;top:0;z-index:999;background:#FFF3CD;border-bottom:1px solid #FFEAA7;padding:10px 32px;font-size:12px;color:#856404;display:flex;align-items:center;gap:8px;">
+  <span>🖨️</span>
+  <span>Para márgenes correctos: en el diálogo de impresión selecciona <strong>Márgenes → Predeterminados</strong> y activa <strong>Gráficos de fondo</strong>.</span>
+</div>
 <div id="report-body">
 
 <!-- ══ COVER ══════════════════════════════════════════════════════════════════ -->
