@@ -113,7 +113,7 @@ export default function Home() {
         }}
       >
         <Link
-          href="/canvas"
+          href="/project/new/context"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -198,7 +198,7 @@ export default function Home() {
       {/* ── CTA ── */}
       <div style={{ position: 'relative', zIndex: 2 }}>
         <Link
-          href="/canvas"
+          href="/project/new/context"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -216,7 +216,7 @@ export default function Home() {
           }}
         >
           <span style={{ fontSize: 16 }}>🎬</span>
-          Iniciar el canvas
+          Crear presentación
         </Link>
       </div>
 

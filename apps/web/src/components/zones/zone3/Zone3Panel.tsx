@@ -12,8 +12,9 @@ import type {
 } from './types'
 import { EMPTY_ZONE3 } from './types'
 import SlidePreview, { autoLayout, LAYOUT_META } from './SlideLayouts'
-import { generateZone3Pptx } from './exportPptx'
-import { generateZone3Pdf  } from './exportPdf'
+// Export functions removed — will be rewritten natively in the export step
+const generateZone3Pptx = async (_els: HTMLElement[], _t?: string) => {}
+const generateZone3Pdf = async (..._args: unknown[]) => {}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface Zone3PanelProps {
