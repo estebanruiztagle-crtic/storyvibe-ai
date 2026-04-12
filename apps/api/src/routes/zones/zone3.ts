@@ -116,51 +116,76 @@ router.post('/suggest-graphics', async (req: Request, res: Response) => {
 
     const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 3000,
-      system: `Eres un diseñador experto en presentaciones corporativas y visualización de datos.
-Para cada lámina de una presentación, sugiere el tipo de gráfico o infografía más efectivo para comunicar su concepto, considerando el tipo emocional y la intensidad.
+      max_tokens: 5000,
+      system: `Eres un director creativo experto en pitch decks ejecutivos y storytelling visual.
+Tu trabajo es transformar cada lámina en una pieza de contenido PODEROSA que combine datos, insights y narrativa persuasiva.
 
-Tipos disponibles:
-- bar_chart: Gráfico de barras — para comparaciones, rankings, cifras por categoría
-- line_chart: Gráfico de líneas — para tendencias, evolución temporal, crecimiento
-- donut_chart: Gráfico de dona — para proporciones, distribución de partes
-- comparison_table: Tabla comparativa — para pros/contras, opciones, alternativas
-- process_flow: Flujo de proceso — para metodología, pasos, cómo funciona algo
-- timeline: Línea de tiempo — para hoja de ruta, historia, evolución
-- stats_highlight: Estadísticas destacadas — para datos clave de alto impacto, cifras WOW
-- quote_block: Cita destacada — para testimonios, declaraciones de expertos, afirmaciones
-- icon_grid: Grid de iconos — para listar características, beneficios, pilares
-- before_after: Antes / Después — para transformación, impacto, contraste situacional
+PRINCIPIOS DE DISEÑO EJECUTIVO:
+- Titulares DECLARATIVOS: declaran la conclusión ("Las ventas crecieron 40%"), NUNCA temas pasivos ("Ventas").
+- UNA idea por diapositiva con mensaje claro y memorable.
+- El contenido debe incluir datos específicos, recomendaciones accionables o insights diferenciadores.
+- Framework Sparkline: alterna entre "lo que es" y "lo que podría ser" para crear tensión emocional.
+- Principio de la Pirámide: conclusión primero, evidencia después.
+
+Tipos de gráfico disponibles:
+- bar_chart: Gráfico de barras — comparaciones, rankings, cifras por categoría
+- line_chart: Gráfico de líneas — tendencias, evolución temporal, crecimiento
+- donut_chart: Gráfico de dona — proporciones, distribución de partes
+- comparison_table: Tabla comparativa — pros/contras, opciones, alternativas
+- process_flow: Flujo de proceso — metodología, pasos, cómo funciona
+- timeline: Línea de tiempo — hoja de ruta, historia, evolución
+- stats_highlight: Estadísticas destacadas — datos clave de alto impacto, cifras WOW
+- quote_block: Cita destacada — testimonios, declaraciones, afirmaciones
+- icon_grid: Grid de iconos — características, beneficios, pilares
+- before_after: Antes / Después — transformación, impacto, contraste
 
 Criterios de selección por tipo emocional:
-- peak (pico, alta intensidad): stats_highlight, before_after, bar_chart — impacto visual máximo
-- valley (valle, reflexión): comparison_table, quote_block, line_chart — análisis y profundidad
-- transition (transición): process_flow, timeline, icon_grid — narración de cambio
+- peak: stats_highlight, before_after, bar_chart — impacto visual máximo
+- valley: comparison_table, quote_block, line_chart — análisis y profundidad
+- transition: process_flow, timeline, icon_grid — narración de cambio
 
-Responde ÚNICAMENTE con JSON válido, sin texto adicional:
+Para cada lámina genera:
+- slide: número
+- type: tipo de gráfico más efectivo
+- title: Título DECLARATIVO y concreto (la conclusión principal de esta slide, máx 50 chars). Ej: "3x más retención con onboarding guiado"
+- description: 3-4 frases con el CONTENIDO REAL de la slide: qué dato mostrar, qué insight comunicar, qué recomendación dar. Escribe como si redactaras el copy final de la diapositiva. Incluye números, porcentajes, comparaciones o hechos concretos basados en el contexto del negocio.
+- tips: Array de 2-3 consejos prácticos para el presentador sobre CÓMO comunicar esta slide con máximo impacto (técnicas de delivery, pausas, contacto visual, etc.)
+- why: Por qué este tipo de gráfico y contenido encaja con la emoción de esta lámina (1 frase)
+
+Responde ÚNICAMENTE con JSON válido:
 {
   "suggestions": [
     {
       "slide": 1,
       "type": "stats_highlight",
-      "title": "Título concreto del gráfico (no genérico)",
-      "description": "Qué datos o información mostraría este gráfico (1-2 frases específicas al contexto)",
-      "why": "Por qué este tipo encaja con la emoción y el tópico de esta lámina específica (1 frase)"
+      "title": "Título declarativo concreto",
+      "description": "Contenido rico y específico de la slide...",
+      "tips": ["Consejo 1", "Consejo 2"],
+      "why": "Razón de la elección"
     }
   ]
 }`,
       messages: [
         {
           role: 'user',
-          content: `Sugiere el mejor gráfico o infografía para cada lámina de esta presentación.
+          content: `Genera contenido PODEROSO para cada lámina de este pitch deck ejecutivo.
 
-Sector y audiencia (Zona 1):
+CONTEXTO DEL NEGOCIO (Zona 1):
 ${JSON.stringify(zone1Context, null, 2)}
 
-Láminas con arco emocional:
-${curvePoints.map((p) => `- Lámina ${p.slide}: "${p.fullLabel}" | tipo: ${p.type} | emoción: ${p.emotion} | intensidad: ${p.intensity}/10`).join('\n')}
+LÁMINAS CON ARCO EMOCIONAL Y DIRECCIÓN DE CONTENIDO:
+${curvePoints.map((p) => `- Lámina ${p.slide}: "${p.suggestedTitle || p.fullLabel}"
+  Tipo emocional: ${p.type} | Emoción: ${p.emotion} | Intensidad: ${p.intensity}/10
+  Dirección de contenido: ${(p as any).contentDirection || p.fullLabel}
+  Mensaje clave: ${(p as any).keyMessage || 'No definido'}
+  Estilo de diseño: ${(p as any).designStyle || 'hero'}`).join('\n')}
 
-Genera exactamente una sugerencia por cada lámina listada.`,
+INSTRUCCIONES:
+- Usa los datos del contexto de negocio para generar contenido ESPECÍFICO (cifras, métricas, comparaciones reales del sector).
+- Cada title debe ser una afirmación poderosa que declare un insight, NO un tema genérico.
+- Cada description debe tener contenido listo para poner en la slide: datos, recomendaciones, insights diferenciadores.
+- Los tips deben ser técnicas de delivery concretas para esa slide específica.
+- Genera exactamente una sugerencia por cada lámina.`,
         },
       ],
     })

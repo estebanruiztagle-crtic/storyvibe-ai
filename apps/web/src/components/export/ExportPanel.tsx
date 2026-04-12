@@ -109,11 +109,13 @@ export default function ExportPanel() {
           color: '9B9895', align: 'right',
         })
 
-        // Speaker notes from curve point
+        // Speaker notes from curve point + tips
         const curvePoint = narrative.curvePoints.find((p) => p.slide === slide.slide)
-        if (curvePoint?.speakerNotes) {
-          pptxSlide.addNotes(curvePoint.speakerNotes)
-        }
+        const tips = (slide.graphicSuggestion as any)?.tips as string[] | undefined
+        const noteParts: string[] = []
+        if (curvePoint?.speakerNotes) noteParts.push(curvePoint.speakerNotes)
+        if (tips?.length) noteParts.push('\n--- Tips de delivery ---\n' + tips.map(t => `• ${t}`).join('\n'))
+        if (noteParts.length) pptxSlide.addNotes(noteParts.join('\n'))
       }
 
       const fileName = (title || 'presentacion').replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ\s-]/g, '').replace(/\s+/g, '-')

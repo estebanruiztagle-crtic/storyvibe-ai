@@ -74,7 +74,7 @@ export default function SlideEditor({ state, onChange, onComplete }: Props) {
         const updated = state.slides.map((slide) => {
           const sug = data.suggestions.find((s: { slide: number }) => s.slide === slide.slide)
           if (!sug) return slide
-          return { ...slide, graphicSuggestion: { type: sug.type as GraphicType, title: sug.title, description: sug.description, why: sug.why } }
+          return { ...slide, graphicSuggestion: { type: sug.type as GraphicType, title: sug.title, description: sug.description, why: sug.why, tips: sug.tips } }
         })
         onChange({ ...state, slides: updated, graphicsSuggested: true })
       }
@@ -259,6 +259,21 @@ export default function SlideEditor({ state, onChange, onComplete }: Props) {
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Tips de presentación */}
+          {(active.graphicSuggestion as any)?.tips?.length > 0 && (
+            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-amber-600 mb-2">Tips de delivery</div>
+              <ul className="space-y-1.5">
+                {((active.graphicSuggestion as any).tips as string[]).map((tip: string, i: number) => (
+                  <li key={i} className="text-xs text-neutral-700 flex gap-2">
+                    <span className="text-amber-500 shrink-0">&#9679;</span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

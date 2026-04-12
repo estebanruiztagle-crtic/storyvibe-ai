@@ -21,6 +21,7 @@ export interface SlideContent {
   subtitle: string
   body: string
   why: string
+  tips?: string[]
   imageUrl: string | undefined
   emotion: string
   intensity: number
@@ -33,6 +34,7 @@ export function buildContent(slide: Zone3Slide, swatches?: ColorSwatch[]): Slide
     subtitle: slide.emotion,
     body:     slide.graphicSuggestion?.description ?? slide.fullLabel,
     why:      slide.graphicSuggestion?.why ?? '',
+    tips:     (slide.graphicSuggestion as any)?.tips as string[] | undefined,
     imageUrl: slide.generatedImage?.url ?? slide.uploadedAsset?.dataUrl,
     emotion:  slide.emotion,
     intensity: slide.intensity,

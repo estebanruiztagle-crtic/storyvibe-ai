@@ -407,6 +407,14 @@ MOOD VISUAL disponibles para visualMood:
 - "emotional": fotografía humana, calor visual (prueba_social, cierre)
 - "neutral": balance, presentación corporativa estándar (apertura, transiciones)
 
+PRINCIPIOS DE CONTENIDO EJECUTIVO (obligatorios):
+- Framework Sparkline: oscila entre "lo que es" y "lo que podría ser" para crear tensión.
+- Principio de la Pirámide: lidera con la conclusión/respuesta, seguido de 3 puntos de evidencia.
+- Titulares declarativos: el título DECLARA la conclusión (ej: "Las ventas crecieron 15%"), NUNCA un tema pasivo (ej: "Ventas").
+- Una idea por diapositiva: cada slide tiene UN solo mensaje poderoso.
+- El contentDirection debe incluir el INSIGHT CLAVE, dato concreto o recomendación específica que la audiencia debe recordar.
+- Los speakerNotes deben ser un mini-guión persuasivo: incluir datos, analogías, preguntas retóricas y transiciones al siguiente slide.
+
 Para cada punto de curva, produce:
 - slide: número secuencial desde 1
 - label: etiqueta corta (máx 20 chars)
@@ -418,11 +426,12 @@ Para cada punto de curva, produce:
 - systemType / systemEmotion / systemIntensity: iguales a type/emotion/intensity (valores originales para reset)
 - modified: false
 - mappingRules: array de strings con las reglas aplicadas
-- suggestedTitle: título de diapositiva en español, concreto y accionable (máx 60 chars)
-- contentDirection: 1-2 oraciones describiendo QUÉ comunica esta diapositiva y CÓMO
+- suggestedTitle: título DECLARATIVO en español que comunica la conclusión clave de la slide (máx 60 chars). Ej: "El mercado creció 40% en Q3" NO "Análisis del mercado"
+- contentDirection: 3-4 oraciones con: (1) el insight o dato principal, (2) por qué importa a la audiencia, (3) qué acción implica. Debe ser contenido ESPECÍFICO y memorable, no genérico.
+- keyMessage: la frase más poderosa que el presentador debe decir en esta slide (máx 25 palabras). El "soundbite" que la audiencia recordará.
 - designStyle: uno de los estilos listados arriba (el más apropiado para esta slide)
 - visualMood: uno de los moods listados arriba
-- speakerNotes: 2-3 puntos clave para decir en esta diapositiva
+- speakerNotes: 4-6 líneas de guión persuasivo. Incluir: (1) frase de apertura con gancho, (2) dato o evidencia concreta, (3) conexión emocional con audiencia, (4) transición al siguiente tema. Escribir como si fueras un coach de presentaciones preparando al speaker.
 - durationSeconds: duración estimada en segundos (basado en durationMinutes del tópico × 60, ajustado por tipo)
 
 Además del arco, genera:
@@ -459,7 +468,7 @@ router.post('/generate-curve', async (req: Request, res: Response) => {
 
     const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 3500,
+      max_tokens: 6000,
       system: GENERATE_CURVE_PROMPT,
       messages: [
         {
