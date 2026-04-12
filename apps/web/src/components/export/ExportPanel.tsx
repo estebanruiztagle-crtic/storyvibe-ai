@@ -34,8 +34,17 @@ export default function ExportPanel() {
     setIsExportingPptx(true)
 
     try {
-      // @ts-ignore — dynamic import to avoid SSR bundling of node:https
-      const PptxGenJS = (await import(/* webpackIgnore: true */ 'pptxgenjs')).default
+      // Load pptxgenjs from CDN (avoids node: protocol bundling issues)
+      if (!(window as any).PptxGenJS) {
+        await new Promise<void>((resolve, reject) => {
+          const s = document.createElement('script')
+          s.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.min.js'
+          s.onload = () => resolve()
+          s.onerror = () => reject(new Error('Failed to load pptxgenjs'))
+          document.head.appendChild(s)
+        })
+      }
+      const PptxGenJS = (window as any).PptxGenJS
       const pptx = new PptxGenJS()
       pptx.defineLayout({ name: 'WIDE', width: 13.33, height: 7.5 })
       pptx.layout = 'WIDE'
