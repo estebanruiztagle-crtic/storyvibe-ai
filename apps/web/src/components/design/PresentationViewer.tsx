@@ -107,7 +107,7 @@ export default function PresentationViewer({ state }: Props) {
               containerWidth={Math.min(typeof window !== 'undefined' ? window.innerWidth * 0.9 : 1200, (typeof window !== 'undefined' ? window.innerHeight * 0.9 : 800) * 16 / 9)}
             />
           </div>
-          <div className="mt-6 flex items-center gap-6">
+          <div className="mt-6 flex items-center gap-6" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setCurrent((i) => Math.max(0, i - 1))}
               disabled={current === 0}
@@ -125,7 +125,7 @@ export default function PresentationViewer({ state }: Props) {
             </button>
           </div>
           <button
-            onClick={() => setFullscreen(false)}
+            onClick={(e) => { e.stopPropagation(); setFullscreen(false) }}
             className="absolute top-4 right-6 text-white/40 hover:text-white transition-colors"
           >
             <X size={20} />

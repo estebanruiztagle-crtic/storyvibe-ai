@@ -204,10 +204,11 @@ function StatementLayout({ c, slideN }: { c: SlideContent; slideN: number }) {
       <div style={{ position: 'absolute', top: 56, left: 56, fontSize: 160, lineHeight: 1, color: c.pal.primary, opacity: 0.08, fontFamily: 'Georgia, serif', fontWeight: 900 }}>
         "
       </div>
-      {/* Background image subtle overlay */}
+      {/* Background image — visible with overlay for readability */}
       {c.imageUrl && (
         <>
-          <img src={c.imageUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.07 }} />
+          <img src={c.imageUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18 }} />
+          <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at center, ${c.pal.background}dd 30%, ${c.pal.background}99 100%)` }} />
         </>
       )}
       {/* Center content */}
@@ -272,9 +273,12 @@ function MetricsLayout({ c, slideN }: { c: SlideContent; slideN: number }) {
           </div>
         ))}
       </div>
-      {/* Background image faint */}
+      {/* Background image — visible strip on right */}
       {c.imageUrl && (
-        <img src={c.imageUrl} alt="" style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '35%', objectFit: 'cover', opacity: 0.08 }} />
+        <>
+          <img src={c.imageUrl} alt="" style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '35%', objectFit: 'cover' }} />
+          <div style={{ position: 'absolute', right: 0, top: 0, height: '100%', width: '35%', background: `linear-gradient(to right, ${c.pal.background} 0%, transparent 40%)` }} />
+        </>
       )}
       <SlideNumber n={slideN} color={c.pal.neutral} />
     </div>
@@ -330,9 +334,12 @@ function ThreeColLayout({ c, slideN }: { c: SlideContent; slideN: number }) {
           </div>
         ))}
       </div>
-      {/* Background image faint top-right */}
+      {/* Background image — subtle full background */}
       {c.imageUrl && (
-        <img src={c.imageUrl} alt="" style={{ position: 'absolute', right: 0, top: 0, width: '25%', height: '40%', objectFit: 'cover', opacity: 0.07 }} />
+        <>
+          <img src={c.imageUrl} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.12 }} />
+          <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(to bottom, ${c.pal.background}ee 0%, ${c.pal.background}cc 50%, ${c.pal.background}ee 100%)` }} />
+        </>
       )}
       <div style={{ position: 'absolute', bottom: 40, right: 60 }}>
         <DotGrid x={0} y={0} color={c.pal.primary} opacity={0.10} />

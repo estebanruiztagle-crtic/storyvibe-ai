@@ -65,18 +65,22 @@ export default function EvaluationPanel() {
               type: slide.type,
               emotion: slide.emotion,
               intensity: slide.intensity,
-              graphicSuggestion: slide.graphicSuggestion,
-              useGraphic: slide.useGraphic,
-              selectedLayout: slide.selectedLayout,
-              hasImage: !!(slide.generatedImage || slide.uploadedAsset),
+              globalScore: null,
+              globalStatus: 'pending',
+              snapshot: null,
+              axes: null,
+              suggestions: [],
+              mockBg: `linear-gradient(135deg, #1a1208 0%, #2d1a0a 100%)`,
+              evaluated: false,
             },
             zone1ContextJson: JSON.stringify(context),
             curvePointsJson: JSON.stringify(narrative.curvePoints),
+            brandLayerJson: JSON.stringify(context),
           }),
         })
 
-        if (!res.ok) throw new Error(`Error evaluando slide ${slide.slide}`)
         const data = await res.json()
+        if (!res.ok) throw new Error(data.error ?? `Error del servidor (${res.status}) en slide ${slide.slide}`)
 
         if (data.success && data.updatedSlide) {
           const u = data.updatedSlide
