@@ -147,6 +147,13 @@ REGLAS DE CONVERSACIÓN:
 5. Usa el contexto ya conocido para hacer preguntas más inteligentes
 6. Identifica proactivamente riesgos y genera alertas
 
+REGLA CRÍTICA DE FLUJO:
+- Tu agentMessage SIEMPRE debe terminar con una pregunta concreta para avanzar el diagnóstico.
+- Estructura del agentMessage: (1) breve acuse de recibo de lo que el usuario dijo (1 oración máximo), (2) la siguiente pregunta directa.
+- NUNCA respondas solo con comentarios, resúmenes o reflexiones sin pregunta.
+- Avanza rápido: no repitas lo que el usuario ya dijo. Agradece brevemente y pregunta lo siguiente.
+- El campo nextQuestion debe ser IDÉNTICO a la pregunta que incluiste al final del agentMessage.
+
 CÁLCULO DE COMPLETENESS:
 Cuenta los campos NO VACÍOS de los 26 requeridos:
 - event.type, event.name, event.date, event.format, event.durationMinutes, event.language, event.location, event.formalityLevel
@@ -220,50 +227,40 @@ router.post('/diagnose', async (req: Request, res: Response) => {
     }
 
     // Build messages array for Claude
+    // Build a single-turn message with full state context
+    // This approach gives Claude complete awareness of what's been collected vs what's missing
     const messages: Anthropic.MessageParam[] = []
 
-    // If sources were uploaded, inject them as the first context message
-    if (sourceSummary && conversationHistory && conversationHistory.length === 0) {
+    const safeCtx = currentContext ?? {}
+    const stateSnapshot = `ESTADO ACTUAL DEL DIAGNÓSTICO (completeness: ${safeCtx.completeness ?? 0}%):
+Evento: tipo=${safeCtx.event?.type || '?'}, nombre=${safeCtx.event?.name || '?'}, fecha=${safeCtx.event?.date || '?'}, formato=${safeCtx.event?.format || '?'}, duración=${safeCtx.event?.durationMinutes || '?'}min, Q&A=${safeCtx.event?.qaMinutes || '?'}min, idioma=${safeCtx.event?.language || '?'}, lugar=${safeCtx.event?.location || '?'}, formalidad=${safeCtx.event?.formalityLevel || '?'}/10
+Audiencia: segmentos=${(safeCtx.audience?.segments?.length ?? 0) > 0 ? JSON.stringify(safeCtx.audience?.segments) : '?'}, baseline=${safeCtx.audience?.emotionalBaseline || '?'}, tamaño=${safeCtx.audience?.size || '?'}, motivación=${safeCtx.audience?.primaryMotivation || '?'}, miedo=${safeCtx.audience?.primaryFear || '?'}, atención=${safeCtx.audience?.attentionMinutes || '?'}min, familiaridad=${safeCtx.audience?.familiarity || '?'}
+Objetivo: primario=${safeCtx.objective?.primary || '?'}, acción=${safeCtx.objective?.desiredAction || '?'}, métrica=${safeCtx.objective?.successMetric || '?'}, recordar=${safeCtx.objective?.mustRemember || '?'}, sentir=${safeCtx.objective?.mustFeel || '?'}
+Tono: primario=${safeCtx.tone?.primary || '?'}, arco=${safeCtx.tone?.narrativeArc || '?'}, hook=${safeCtx.tone?.hook || '?'}, proof=${safeCtx.tone?.proof || '?'}, humor=${safeCtx.tone?.humorAllowed ?? '?'}
+Restricciones: evitar=${(safeCtx.constraints?.avoidTopics?.length ?? 0) > 0 ? JSON.stringify(safeCtx.constraints?.avoidTopics) : '?'}, obligatorios=${(safeCtx.constraints?.mandatoryTopics?.length ?? 0) > 0 ? JSON.stringify(safeCtx.constraints?.mandatoryTopics) : '?'}
+
+Los campos marcados con "?" están pendientes de recopilar.`
+
+    // Build conversation summary (last 6 turns max for context)
+    const recentHistory = (conversationHistory ?? []).slice(-6)
+    const historyText = recentHistory.length > 0
+      ? `\nÚLTIMOS MENSAJES:\n${recentHistory.map(t => `${t.role === 'user' ? 'USUARIO' : 'AGENTE'}: ${t.content}`).join('\n')}`
+      : ''
+
+    const sourceText = sourceSummary
+      ? `\nMATERIAL DE REFERENCIA DEL USUARIO:\n${sourceSummary}`
+      : ''
+
+    if (userMessage?.trim()) {
       messages.push({
         role: 'user',
-        content: `Antes de iniciar el diagnóstico, quiero compartirte material de referencia que he subido:\n\n${sourceSummary}\n\nTen en cuenta este material durante toda la conversación para hacer preguntas más precisas y contextualizar mejor la presentación.`,
+        content: `${stateSnapshot}${sourceText}${historyText}\n\nNUEVO MENSAJE DEL USUARIO: ${userMessage}\n\nResponde con el JSON. Extrae toda la información posible del mensaje y haz la SIGUIENTE pregunta para completar los campos pendientes ("?"). Recuerda: tu agentMessage DEBE terminar con una pregunta concreta.`,
       })
-      messages.push({
-        role: 'assistant',
-        content: '{"agentMessage":"Perfecto, he revisado el material que compartiste. Lo tendré en cuenta durante todo el diagnóstico para hacer preguntas más relevantes y contextualizadas.","updatedFields":{},"newRiskFlags":[],"newPropagationRules":[],"nextQuestion":"","nextQuestionContext":"","completeness":0,"conversationComplete":false}',
-      })
-    }
-
-    // Add conversation history
-    if (conversationHistory && conversationHistory.length > 0) {
-      for (const turn of conversationHistory) {
-        messages.push({
-          role: turn.role === 'agent' ? 'assistant' : 'user',
-          content: turn.content,
-        })
-      }
-    }
-
-    // Add current user message if provided
-    if (userMessage && userMessage.trim()) {
-      // If sources exist and this isn't the first turn, append a brief reminder
-      const sourceReminder = sourceSummary && conversationHistory && conversationHistory.length > 0
-        ? `\n\n[Recordatorio: el usuario tiene fuentes cargadas con el siguiente contenido:\n${sourceSummary}]`
-        : ''
-      messages.push({ role: 'user', content: userMessage + sourceReminder })
-    } else if (messages.length === 0) {
-      // First turn — initiate diagnosis
-      const initContent = sourceSummary
-        ? `Inicia el diagnóstico. Necesito preparar una presentación. Ya he subido material de referencia:\n\n${sourceSummary}`
-        : 'Inicia el diagnóstico. Necesito preparar una presentación.'
-      messages.push({ role: 'user', content: initContent })
-    }
-
-    // Ensure the last message is from the user (Claude requires alternating turns ending with user)
-    if (messages.length > 0 && messages[messages.length - 1]!.role === 'assistant') {
+    } else {
+      // First turn
       messages.push({
         role: 'user',
-        content: 'Continúa con la siguiente pregunta.',
+        content: `${stateSnapshot}${sourceText}\n\nEl usuario acaba de iniciar el diagnóstico. Salúdalo brevemente y hazle la primera pregunta para comenzar a completar los campos. Empieza por el evento o el objetivo — lo que sea más natural.`,
       })
     }
 
