@@ -175,6 +175,16 @@ export default function ExportPanel() {
           <div style="font-size:10px;font-weight:700;color:#9b9895;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Notas del presentador</div>
           <p style="font-size:12px;color:#444441;line-height:1.5;margin:0;">${curvePoint.speakerNotes}</p>
         </div>` : ''}
+        ${content.tips?.length ? `
+        <div style="background:#fffaf0;border:1px solid #f5e6cc;border-radius:8px;padding:12px;margin-top:8px;">
+          <div style="font-size:10px;font-weight:700;color:#BA7517;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Tips de delivery</div>
+          <ul style="margin:0;padding-left:16px;">${content.tips.map(t => `<li style="font-size:12px;color:#444441;line-height:1.5;margin-bottom:4px;">${t}</li>`).join('')}</ul>
+        </div>` : ''}
+        ${reviewScore?.suggestions?.length ? `
+        <div style="background:#fef2f2;border:1px solid #f5cccc;border-radius:8px;padding:12px;margin-top:8px;">
+          <div style="font-size:10px;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Sugerencias de mejora</div>
+          <ul style="margin:0;padding-left:16px;">${reviewScore.suggestions.map(s => `<li style="font-size:12px;color:#444441;line-height:1.5;margin-bottom:4px;">${s}</li>`).join('')}</ul>
+        </div>` : ''}
         ${slide.selectedLayout ? `<div style="font-size:10px;color:#9b9895;margin-top:8px;">Layout: ${slide.selectedLayout}</div>` : ''}
       </div>`
     }).join('')
@@ -219,6 +229,32 @@ export default function ExportPanel() {
 <p class="meta">Guía de diseño generada por StoryVibe AI · ${slides.length} láminas · ${formatTime(totalSeconds)} · ${new Date().toLocaleDateString()}</p>
 ${contextHtml}
 ${paletteHtml}
+${review ? (() => {
+      const avgScore = review.slideScores.length > 0
+        ? (review.slideScores.reduce((a, s) => a + s.composite, 0) / review.slideScores.length).toFixed(1)
+        : '—'
+      const statusColor = review.overallStatus === 'pass' ? '#1D9E75' : review.overallStatus === 'warning' ? '#BA7517' : '#A32D2D'
+      const statusLabel = review.overallStatus === 'pass' ? 'Aprobada' : review.overallStatus === 'warning' ? 'Con observaciones' : 'Necesita mejoras'
+      const totalSuggestions = review.slideScores.reduce((a, s) => a + s.suggestions.length, 0)
+      return `
+    <div style="margin-bottom:32px;border:2px solid ${statusColor}22;border-radius:12px;padding:20px;background:${statusColor}08;">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:12px;">Evaluación general</h2>
+      <div style="display:flex;gap:24px;align-items:center;">
+        <div style="text-align:center;">
+          <div style="font-size:36px;font-weight:800;color:${statusColor};">${avgScore}</div>
+          <div style="font-size:11px;color:#6b6866;">Puntuación promedio</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:${statusColor};">${statusLabel}</div>
+          <div style="font-size:11px;color:#6b6866;">Estado general</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#1a1a18;">${totalSuggestions}</div>
+          <div style="font-size:11px;color:#6b6866;">Sugerencias de mejora</div>
+        </div>
+      </div>
+    </div>`
+    })() : ''}
 <h2 style="font-size:16px;font-weight:700;margin-bottom:16px;">Láminas (${slides.length})</h2>
 ${slideRows}
 <p style="margin-top:32px;font-size:10px;color:#b8b4aa;text-align:center;">Generado por StoryVibe AI · ${new Date().toLocaleDateString()}</p>
