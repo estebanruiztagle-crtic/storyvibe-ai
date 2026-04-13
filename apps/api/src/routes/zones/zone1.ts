@@ -231,13 +231,13 @@ router.post('/diagnose', async (req: Request, res: Response) => {
     // This approach gives Claude complete awareness of what's been collected vs what's missing
     const messages: Anthropic.MessageParam[] = []
 
-    const safeCtx = currentContext ?? {}
-    const stateSnapshot = `ESTADO ACTUAL DEL DIAGNÓSTICO (completeness: ${safeCtx.completeness ?? 0}%):
-Evento: tipo=${safeCtx.event?.type || '?'}, nombre=${safeCtx.event?.name || '?'}, fecha=${safeCtx.event?.date || '?'}, formato=${safeCtx.event?.format || '?'}, duración=${safeCtx.event?.durationMinutes || '?'}min, Q&A=${safeCtx.event?.qaMinutes || '?'}min, idioma=${safeCtx.event?.language || '?'}, lugar=${safeCtx.event?.location || '?'}, formalidad=${safeCtx.event?.formalityLevel || '?'}/10
-Audiencia: segmentos=${(safeCtx.audience?.segments?.length ?? 0) > 0 ? JSON.stringify(safeCtx.audience?.segments) : '?'}, baseline=${safeCtx.audience?.emotionalBaseline || '?'}, tamaño=${safeCtx.audience?.size || '?'}, motivación=${safeCtx.audience?.primaryMotivation || '?'}, miedo=${safeCtx.audience?.primaryFear || '?'}, atención=${safeCtx.audience?.attentionMinutes || '?'}min, familiaridad=${safeCtx.audience?.familiarity || '?'}
-Objetivo: primario=${safeCtx.objective?.primary || '?'}, acción=${safeCtx.objective?.desiredAction || '?'}, métrica=${safeCtx.objective?.successMetric || '?'}, recordar=${safeCtx.objective?.mustRemember || '?'}, sentir=${safeCtx.objective?.mustFeel || '?'}
-Tono: primario=${safeCtx.tone?.primary || '?'}, arco=${safeCtx.tone?.narrativeArc || '?'}, hook=${safeCtx.tone?.hook || '?'}, proof=${safeCtx.tone?.proof || '?'}, humor=${safeCtx.tone?.humorAllowed ?? '?'}
-Restricciones: evitar=${(safeCtx.constraints?.avoidTopics?.length ?? 0) > 0 ? JSON.stringify(safeCtx.constraints?.avoidTopics) : '?'}, obligatorios=${(safeCtx.constraints?.mandatoryTopics?.length ?? 0) > 0 ? JSON.stringify(safeCtx.constraints?.mandatoryTopics) : '?'}
+    const ctxSnap = currentContext ?? {} as Partial<Zone1Context>
+    const stateSnapshot = `ESTADO ACTUAL DEL DIAGNÓSTICO (completeness: ${ctxSnap.completeness ?? 0}%):
+Evento: tipo=${ctxSnap.event?.type || '?'}, nombre=${ctxSnap.event?.name || '?'}, fecha=${ctxSnap.event?.date || '?'}, formato=${ctxSnap.event?.format || '?'}, duración=${ctxSnap.event?.durationMinutes || '?'}min, Q&A=${ctxSnap.event?.qaMinutes || '?'}min, idioma=${ctxSnap.event?.language || '?'}, lugar=${ctxSnap.event?.location || '?'}, formalidad=${ctxSnap.event?.formalityLevel || '?'}/10
+Audiencia: segmentos=${(ctxSnap.audience?.segments?.length ?? 0) > 0 ? JSON.stringify(ctxSnap.audience?.segments) : '?'}, baseline=${ctxSnap.audience?.emotionalBaseline || '?'}, tamaño=${ctxSnap.audience?.size || '?'}, motivación=${ctxSnap.audience?.primaryMotivation || '?'}, miedo=${ctxSnap.audience?.primaryFear || '?'}, atención=${ctxSnap.audience?.attentionMinutes || '?'}min, familiaridad=${ctxSnap.audience?.familiarity || '?'}
+Objetivo: primario=${ctxSnap.objective?.primary || '?'}, acción=${ctxSnap.objective?.desiredAction || '?'}, métrica=${ctxSnap.objective?.successMetric || '?'}, recordar=${ctxSnap.objective?.mustRemember || '?'}, sentir=${ctxSnap.objective?.mustFeel || '?'}
+Tono: primario=${ctxSnap.tone?.primary || '?'}, arco=${ctxSnap.tone?.narrativeArc || '?'}, hook=${ctxSnap.tone?.hook || '?'}, proof=${ctxSnap.tone?.proof || '?'}, humor=${ctxSnap.tone?.humorAllowed ?? '?'}
+Restricciones: evitar=${(ctxSnap.constraints?.avoidTopics?.length ?? 0) > 0 ? JSON.stringify(ctxSnap.constraints?.avoidTopics) : '?'}, obligatorios=${(ctxSnap.constraints?.mandatoryTopics?.length ?? 0) > 0 ? JSON.stringify(ctxSnap.constraints?.mandatoryTopics) : '?'}
 
 Los campos marcados con "?" están pendientes de recopilar.`
 
