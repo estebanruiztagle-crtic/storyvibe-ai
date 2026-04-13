@@ -34,17 +34,18 @@ export default function ExportPanel() {
     setIsExportingPptx(true)
 
     try {
-      // Load pptxgenjs from CDN (avoids node: protocol bundling issues)
+      // Load pptxgenjs v3 from CDN (v4 has node: protocol issues, v3 UMD works in browser)
       if (!(window as any).PptxGenJS) {
         await new Promise<void>((resolve, reject) => {
           const s = document.createElement('script')
-          s.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@4.0.1/dist/pptxgen.min.js'
+          s.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
           s.onload = () => resolve()
           s.onerror = () => reject(new Error('Failed to load pptxgenjs'))
           document.head.appendChild(s)
         })
       }
       const PptxGenJS = (window as any).PptxGenJS
+      if (!PptxGenJS) throw new Error('PptxGenJS not loaded')
       const pptx = new PptxGenJS()
       pptx.defineLayout({ name: 'WIDE', width: 13.33, height: 7.5 })
       pptx.layout = 'WIDE'
@@ -192,10 +193,10 @@ export default function ExportPanel() {
     const paletteHtml = design.palette ? `
     <div style="margin-bottom:32px;">
       <h2 style="font-size:16px;font-weight:700;margin-bottom:12px;">Paleta de colores</h2>
-      <div style="display:flex;gap:12px;margin-bottom:12px;">
+      <div style="display:flex;gap:16px;margin-bottom:12px;">
         ${design.palette.swatches.map((sw) => `
           <div style="text-align:center;">
-            <div style="width:48px;height:48px;border-radius:8px;background:${sw.hex};border:1px solid #e5e2da;"></div>
+            <div style="width:52px;height:52px;border-radius:8px;background-color:${sw.hex} !important;border:1px solid #ccc;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;"></div>
             <div style="font-size:9px;font-family:monospace;color:#6b6866;margin-top:4px;">${sw.hex}</div>
             <div style="font-size:9px;color:#9b9895;">${sw.role}</div>
           </div>
@@ -204,14 +205,109 @@ export default function ExportPanel() {
       <p style="font-size:12px;color:#6b6866;line-height:1.5;">${design.palette.rationale}</p>
     </div>` : ''
 
-    const contextHtml = context?.event || context?.audience || context?.objective ? `
-    <div style="margin-bottom:32px;">
-      <h2 style="font-size:16px;font-weight:700;margin-bottom:12px;">Contexto</h2>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-        ${context?.event ? `<div style="background:#f5f3ef;padding:12px;border-radius:8px;"><div style="font-size:10px;color:#9b9895;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Evento</div><div style="font-size:13px;color:#1a1a18;">${context.event}</div></div>` : ''}
-        ${context?.audience ? `<div style="background:#f5f3ef;padding:12px;border-radius:8px;"><div style="font-size:10px;color:#9b9895;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Audiencia</div><div style="font-size:13px;color:#1a1a18;">${context.audience}</div></div>` : ''}
-        ${context?.objective ? `<div style="background:#f5f3ef;padding:12px;border-radius:8px;"><div style="font-size:10px;color:#9b9895;font-weight:700;text-transform:uppercase;margin-bottom:4px;">Objetivo</div><div style="font-size:13px;color:#1a1a18;">${context.objective}</div></div>` : ''}
+    // ── Diagnóstico completo (Zone 1 data) ──
+    const ctx = context
+    const diagField = (label: string, value: string | number | undefined | null | boolean) => {
+      const v = value === undefined || value === null || value === '' || value === 0 || value === false ? null : String(value)
+      return v ? `<div style="margin-bottom:8px;"><span style="font-size:10px;font-weight:700;color:#9b9895;text-transform:uppercase;letter-spacing:0.05em;">${label}</span><div style="font-size:13px;color:#1a1a18;margin-top:2px;">${v}</div></div>` : ''
+    }
+
+    const eventHtml = ctx?.event ? `
+    <div style="background:#f5f3ef;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <h3 style="font-size:13px;font-weight:700;color:#1a1a18;margin:0 0 12px;">Evento</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 16px;">
+        ${diagField('Tipo', ctx.event.type)}
+        ${diagField('Nombre', ctx.event.name)}
+        ${diagField('Fecha', ctx.event.date)}
+        ${diagField('Formato', ctx.event.format)}
+        ${diagField('Duración', ctx.event.durationMinutes ? `${ctx.event.durationMinutes} min` : '')}
+        ${diagField('Q&A', ctx.event.qaMinutes ? `${ctx.event.qaMinutes} min` : '')}
+        ${diagField('Idioma', ctx.event.language)}
+        ${diagField('Lugar', ctx.event.location)}
+        ${diagField('Formalidad', ctx.event.formalityLevel ? `${ctx.event.formalityLevel}/10` : '')}
       </div>
+    </div>` : ''
+
+    const audienceHtml = ctx?.audience ? `
+    <div style="background:#f5f3ef;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <h3 style="font-size:13px;font-weight:700;color:#1a1a18;margin:0 0 12px;">Audiencia</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
+        ${diagField('Tamaño', ctx.audience.size ? `${ctx.audience.size} personas` : '')}
+        ${diagField('Baseline emocional', ctx.audience.emotionalBaseline)}
+        ${diagField('Motivación principal', ctx.audience.primaryMotivation)}
+        ${diagField('Miedo principal', ctx.audience.primaryFear)}
+        ${diagField('Atención', ctx.audience.attentionMinutes ? `${ctx.audience.attentionMinutes} min` : '')}
+        ${diagField('Familiaridad', ctx.audience.familiarity)}
+      </div>
+      ${ctx.audience.segments?.length ? `
+      <div style="margin-top:12px;">
+        <div style="font-size:10px;font-weight:700;color:#9b9895;text-transform:uppercase;margin-bottom:8px;">Segmentos</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${ctx.audience.segments.map(seg => `
+            <div style="background:white;border-radius:8px;padding:8px 12px;border:1px solid #e5e2da;flex:1;min-width:140px;">
+              <div style="font-size:12px;font-weight:700;color:#1a1a18;">${seg.role}</div>
+              <div style="font-size:11px;color:#6b6866;">${seg.percentage}% — ${seg.description}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>` : ''}
+    </div>` : ''
+
+    const objectiveHtml = ctx?.objective ? `
+    <div style="background:#f5f3ef;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <h3 style="font-size:13px;font-weight:700;color:#1a1a18;margin:0 0 12px;">Objetivo</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
+        ${diagField('Objetivo primario', ctx.objective.primary)}
+        ${diagField('Acción deseada', ctx.objective.desiredAction)}
+        ${diagField('Métrica de éxito', ctx.objective.successMetric)}
+        ${diagField('Debe recordar', ctx.objective.mustRemember)}
+        ${diagField('Debe sentir', ctx.objective.mustFeel)}
+      </div>
+    </div>` : ''
+
+    const toneHtml = ctx?.tone ? `
+    <div style="background:#f5f3ef;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <h3 style="font-size:13px;font-weight:700;color:#1a1a18;margin:0 0 12px;">Tono narrativo</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
+        ${diagField('Tono primario', ctx.tone.primary)}
+        ${diagField('Arco narrativo', ctx.tone.narrativeArc)}
+        ${diagField('Hook', ctx.tone.hook)}
+        ${diagField('Prueba/Proof', ctx.tone.proof)}
+        ${diagField('Humor permitido', ctx.tone.humorAllowed ? 'Sí' : 'No')}
+      </div>
+      ${ctx.tone.arc?.opening || ctx.tone.arc?.middle || ctx.tone.arc?.closing ? `
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        ${ctx.tone.arc.opening ? `<div style="background:white;border-radius:8px;padding:8px;border:1px solid #e5e2da;"><div style="font-size:10px;font-weight:700;color:#9b9895;margin-bottom:4px;">APERTURA</div><div style="font-size:11px;color:#1a1a18;">${ctx.tone.arc.opening}</div></div>` : ''}
+        ${ctx.tone.arc.middle ? `<div style="background:white;border-radius:8px;padding:8px;border:1px solid #e5e2da;"><div style="font-size:10px;font-weight:700;color:#9b9895;margin-bottom:4px;">DESARROLLO</div><div style="font-size:11px;color:#1a1a18;">${ctx.tone.arc.middle}</div></div>` : ''}
+        ${ctx.tone.arc.closing ? `<div style="background:white;border-radius:8px;padding:8px;border:1px solid #e5e2da;"><div style="font-size:10px;font-weight:700;color:#9b9895;margin-bottom:4px;">CIERRE</div><div style="font-size:11px;color:#1a1a18;">${ctx.tone.arc.closing}</div></div>` : ''}
+      </div>` : ''}
+    </div>` : ''
+
+    const risksHtml = ctx?.riskFlags?.length ? `
+    <div style="background:#fef2f2;border:1px solid #f5cccc;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <h3 style="font-size:13px;font-weight:700;color:#A32D2D;margin:0 0 12px;">Riesgos detectados</h3>
+      ${ctx.riskFlags.map(r => `
+        <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #f5cccc;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:${r.severity === 'alta' ? '#A32D2D' : r.severity === 'media' ? '#BA7517' : '#6b6866'};color:white;">${r.severity.toUpperCase()}</span>
+            <span style="font-size:12px;font-weight:700;color:#1a1a18;">${r.title}</span>
+          </div>
+          <div style="font-size:11px;color:#6b6866;margin-top:4px;">${r.mitigation}</div>
+        </div>
+      `).join('')}
+    </div>` : ''
+
+    const constraintsHtml = ctx?.constraints && (ctx.constraints.mandatoryTopics?.length || ctx.constraints.avoidTopics?.length) ? `
+    <div style="background:#f5f3ef;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <h3 style="font-size:13px;font-weight:700;color:#1a1a18;margin:0 0 12px;">Restricciones</h3>
+      ${ctx.constraints.mandatoryTopics?.length ? `<div style="margin-bottom:8px;"><span style="font-size:10px;font-weight:700;color:#1D9E75;">TEMAS OBLIGATORIOS:</span> <span style="font-size:12px;color:#1a1a18;">${ctx.constraints.mandatoryTopics.join(', ')}</span></div>` : ''}
+      ${ctx.constraints.avoidTopics?.length ? `<div><span style="font-size:10px;font-weight:700;color:#A32D2D;">TEMAS A EVITAR:</span> <span style="font-size:12px;color:#1a1a18;">${ctx.constraints.avoidTopics.join(', ')}</span></div>` : ''}
+    </div>` : ''
+
+    const diagnosisHtml = (eventHtml || audienceHtml || objectiveHtml || toneHtml) ? `
+    <div style="margin-bottom:32px;">
+      <h2 style="font-size:16px;font-weight:700;margin-bottom:16px;">Diagnóstico de contexto</h2>
+      ${eventHtml}${audienceHtml}${objectiveHtml}${toneHtml}${constraintsHtml}${risksHtml}
     </div>` : ''
 
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title || 'Presentación'} — Guía StoryVibe</title>
@@ -221,13 +317,14 @@ export default function ExportPanel() {
   h1 { font-size: 28px; margin-bottom: 4px; }
   .meta { color: #9b9895; font-size: 13px; margin-bottom: 32px; }
   @media print {
-    body { margin: 16px; max-width: 100%; }
+    body { margin: 16px; max-width: 100%; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
     .slide-card { break-inside: avoid; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   }
 </style></head><body>
 <h1>${title || 'Presentación'}</h1>
 <p class="meta">Guía de diseño generada por StoryVibe AI · ${slides.length} láminas · ${formatTime(totalSeconds)} · ${new Date().toLocaleDateString()}</p>
-${contextHtml}
+${diagnosisHtml}
 ${paletteHtml}
 ${review ? (() => {
       const avgScore = review.slideScores.length > 0
