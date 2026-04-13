@@ -10,9 +10,11 @@ import { zone3Router } from './routes/zones/zone3'
 import { zone4Router } from './routes/zones/zone4'
 import zone5Router from './routes/zones/zone5'
 
-// Load .env from the api package root regardless of where the process was started
-const dotenvPath = path.resolve(__dirname, '../.env')
-dotenv.config({ path: dotenvPath, override: true })
+// Load .env from the api package root (local dev only; Vercel uses dashboard env vars)
+if (process.env.NODE_ENV !== 'production') {
+  const dotenvPath = path.resolve(__dirname, '../.env')
+  dotenv.config({ path: dotenvPath, override: true })
+}
 
 const app = express()
 const PORT = process.env['PORT'] ?? 3001
@@ -57,8 +59,11 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   res.status(500).json({ error: 'Internal server error', message: err.message })
 })
 
-app.listen(PORT, () => {
-  console.log(`StoryVibe API running on port ${PORT}`)
-})
+// Start server only in non-serverless environments
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`StoryVibe API running on port ${PORT}`)
+  })
+}
 
 export default app
