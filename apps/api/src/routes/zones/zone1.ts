@@ -402,8 +402,7 @@ router.post('/diagnose', async (req: Request, res: Response) => {
     })
   } catch (error) {
     console.error('Zone1 diagnose error:', error)
-    const detail = error instanceof Error ? error.message : String(error)
-    res.status(500).json({ success: false, error: 'Error en el agente de diagnóstico', detail })
+    res.status(500).json({ success: false, error: 'Error en el agente de diagnóstico' })
   }
 })
 
