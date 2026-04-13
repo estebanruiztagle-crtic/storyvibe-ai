@@ -42,6 +42,7 @@ router.post('/generate-palette', async (req: Request, res: Response) => {
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 1500,
       system: `Eres un director de arte especializado en presentaciones corporativas de alto impacto.
+IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
 Dado el contexto de la presentación (sector, audiencia, tono de marca) y su arquitectura narrativa (framework elegido, arco emocional, tópicos), genera una paleta de colores profesional, cohesiva y estratégica.
 
 La paleta debe:
@@ -122,6 +123,7 @@ router.post('/suggest-graphics', async (req: Request, res: Response) => {
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 5000,
       system: `Eres un director creativo experto en pitch decks ejecutivos y storytelling visual.
+IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
 Tu trabajo es transformar cada lámina en una pieza de contenido PODEROSA que combine datos, insights y narrativa persuasiva.
 
 PRINCIPIOS DE DISEÑO EJECUTIVO:
@@ -231,6 +233,7 @@ router.post('/generate-title', async (req: Request, res: Response) => {
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 80,
       system: `Eres un experto en copywriting para presentaciones corporativas de alto impacto.
+IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
 Genera un título corto, poderoso y memorable para una presentación de negocios.
 
 Reglas:

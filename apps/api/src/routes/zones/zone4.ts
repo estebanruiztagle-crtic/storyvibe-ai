@@ -106,6 +106,7 @@ function normalizeAxisStatus(score: number): 'pass' | 'warning' | 'fail' {
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are the Design Critic Agent for StoryVibe AI. You evaluate presentation slide designs against 3 axes.
+LANGUAGE: All feedback and suggestions MUST be in neutral Latin American Spanish (NOT Argentine, NOT Spain Spanish). Use "tú" form.
 
 You receive:
 - Slide info: topic, emotional type (peak/valley/transition), intensity (1-10), emotion label

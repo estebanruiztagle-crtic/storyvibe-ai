@@ -84,6 +84,8 @@ function extractJson(raw: string): string {
 // ─── POST /suggest-topics ─────────────────────────────────────────────────────
 const SUGGEST_TOPICS_PROMPT = `Eres el Agente de Curación de Tópicos para StoryVibe AI.
 
+IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
+
 Basado en el contexto de Zona 1 (audiencia, objetivo, tono, restricciones), sugiere 6-8 tópicos candidatos para la presentación. Identifica cuáles son obligatorios por las restricciones de Zona 1. Calcula un "author pattern" simulado.
 
 Tipos de tópico permitidos: problema_contexto, dato_duro, propuesta_valor, prueba_social, visión, contexto_mercado
@@ -241,6 +243,8 @@ router.post('/suggest-topics', async (req: Request, res: Response) => {
 // ─── POST /suggest-frameworks ─────────────────────────────────────────────────
 const SUGGEST_FRAMEWORKS_PROMPT = `Eres el Agente de Arquitectura Narrativa para StoryVibe AI.
 
+IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
+
 Dado el contexto de Zona 1 y los tópicos seleccionados, evalúa y presenta exactamente 4 frameworks narrativos para estructurar la presentación. Calcula un fitScore (0-100) basado en el match con el contexto.
 
 Para cada framework:
@@ -369,6 +373,8 @@ router.post('/suggest-frameworks', async (req: Request, res: Response) => {
 
 // ─── POST /generate-curve ─────────────────────────────────────────────────────
 const GENERATE_CURVE_PROMPT = `Eres el Agente Generador del Arco Narrativo para StoryVibe AI.
+
+IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
 
 Convierte el framework narrativo seleccionado y los tópicos en una secuencia de puntos de curva emocional. Cada tópico se convierte en 1 diapositiva. Tu output es el CONTRATO DE DISEÑO que el Acto #3 usará para diseñar cada diapositiva.
 

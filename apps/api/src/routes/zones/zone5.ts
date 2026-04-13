@@ -42,6 +42,8 @@ router.post('/calculate-pacing', async (req: Request, res: Response): Promise<vo
 
   const systemPrompt = `Eres un experto en presentaciones de alto impacto. Tu tarea es asignar la distribución de tiempo óptima para cada slide de una presentación, respetando el tiempo total disponible y la curva emocional.
 
+IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
+
 Reglas:
 - Los slides tipo "peak" (pico emocional) merecen más tiempo para que la audiencia procese el impacto
 - Los slides tipo "valley" (análisis/datos) necesitan tiempo para que la audiencia absorba la información
@@ -168,6 +170,7 @@ interface PitchData {
 }
 
 const GENERATE_PITCH_SYSTEM = `Eres un coach experto en storytelling y presentaciones de alto impacto.
+IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
 Tu tarea es generar el PITCH NARRATIVO de una presentación: cómo el presentador debe contar la historia de principio a fin.
 
 Agrupa las slides en 3-5 secciones narrativas (no necesariamente una por slide). Cada sección debe tener:
