@@ -14,6 +14,10 @@ interface CurvePoint {
   type: PointType
   emotion: string
   intensity: number
+  suggestedTitle?: string
+  contentDirection?: string
+  keyMessage?: string
+  designStyle?: string
 }
 
 // ─── Helper: extract JSON from Claude response ────────────────────────────────
