@@ -11,7 +11,7 @@ import { useAppStore } from '@/store'
 import type { ReviewResult, SlideRedesign } from '@/store/slices/review'
 import type { DesignStyle, VisualMood } from '@/components/zones/zone2/types'
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+const API = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001').trim()
 
 type SlideStatus = 'pass' | 'warning' | 'fail' | 'pending'
 
