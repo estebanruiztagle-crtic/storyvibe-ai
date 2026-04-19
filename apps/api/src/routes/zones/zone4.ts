@@ -1,7 +1,7 @@
-import { Router, type Router as RouterType, Request, Response } from 'express'
+import { Router, Request, Response } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
 
-const router: RouterType = Router()
+const router = Router()
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // ─── Types ────────────────────────────────────────────────────────────────────
