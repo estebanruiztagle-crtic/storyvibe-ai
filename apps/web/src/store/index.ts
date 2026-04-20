@@ -5,15 +5,25 @@ import { createNarrativeSlice, type NarrativeSlice } from './slices/narrative'
 import { createDesignSlice, type DesignSlice } from './slices/design'
 import { createReviewSlice, type ReviewSlice } from './slices/review'
 
-export type AppStore = ContextSlice & NarrativeSlice & DesignSlice & ReviewSlice
+export type AppStore = ContextSlice & NarrativeSlice & DesignSlice & ReviewSlice & {
+  resetProject: () => void
+}
 
 export const useAppStore = create<AppStore>()(
   persist(
-    (...a) => ({
-      ...createContextSlice(...a),
-      ...createNarrativeSlice(...a),
-      ...createDesignSlice(...a),
-      ...createReviewSlice(...a),
+    (set, get, api) => ({
+      ...createContextSlice(set, get, api),
+      ...createNarrativeSlice(set, get, api),
+      ...createDesignSlice(set, get, api),
+      ...createReviewSlice(set, get, api),
+      resetProject: () => {
+        get().clearContext()
+        get().clearNarrative()
+        get().clearDesign()
+        get().clearReview()
+        get().clearRedesign()
+        set({ presentationTitle: '', redesignApplied: false })
+      },
     }),
     {
       name: 'storyvibe-project',
