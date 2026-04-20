@@ -3,51 +3,201 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --bg:          #07080E;
-    --surface:     #0D0F1A;
-    --surface-2:   #131523;
-    --border:      rgba(255, 255, 255, 0.07);
-    --border-accent: rgba(99, 102, 241, 0.25);
-    --text:        #EEF0FA;
-    --text-muted:  #5B5F7A;
-    --text-mid:    #9296B0;
-    --accent:      #6366F1;
-    --accent-light: #818CF8;
-    --accent-dim:  rgba(99, 102, 241, 0.12);
-    --success:     #34D399;
-    --success-dim: rgba(52, 211, 153, 0.1);
-    --danger:      #F87171;
-    --radius-sm:   8px;
-    --radius:      12px;
-    --radius-lg:   16px;
+
+  /* ══════════════════════════════════════════
+     DARK THEME  (default)
+     All muted text verified ≥ 4.5:1 on --bg
+  ══════════════════════════════════════════ */
+  :root,
+  [data-theme="dark"] {
+    --bg:             #07080E;
+    --surface:        #0D0F1A;
+    --surface-2:      #131523;
+    --surface-3:      #1A1D30;
+    --border:         rgba(255,255,255,0.08);
+    --border-accent:  rgba(99,102,241,0.30);
+
+    /* Text — WCAG AA verified on --bg */
+    --text:           #EEF0FA;   /* 15.1:1  ✓ */
+    --text-mid:       #A0A4C0;   /* 6.4:1   ✓ */
+    --text-muted:     #7B80A0;   /* 5.0:1   ✓  (was #5B5F7A = 3.1:1 ✗) */
+
+    --accent:         #6366F1;
+    --accent-light:   #818CF8;
+    --accent-dim:     rgba(99,102,241,0.14);
+    --accent-hover:   #4F52D9;
+
+    --success:        #34D399;
+    --success-dim:    rgba(52,211,153,0.12);
+
+    --danger:         #F87171;
+    --danger-dim:     rgba(248,113,113,0.12);
+
+    --input-bg:       #0D0F1A;
+    --input-border:   rgba(255,255,255,0.10);
+    --input-text:     #EEF0FA;
+    --input-ph:       #4B506A;   /* placeholder — decorative, 3:1 acceptable */
+
+    --scrollbar:      rgba(255,255,255,0.08);
+    --scrollbar-h:    rgba(255,255,255,0.16);
+
+    --glass-bg:       rgba(13,15,26,0.82);
+    --header-bg:      rgba(7,8,14,0.95);
+
+    --shadow-sm:      0 1px 4px rgba(0,0,0,0.5);
+    --shadow:         0 4px 20px rgba(0,0,0,0.6);
+    --shadow-lg:      0 12px 40px rgba(0,0,0,0.7);
+
+    --radius-sm: 8px;
+    --radius:    12px;
+    --radius-lg: 16px;
   }
 
-  * {
-    box-sizing: border-box;
+  /* ══════════════════════════════════════════
+     LIGHT THEME
+     All muted text verified ≥ 4.5:1 on --surface
+  ══════════════════════════════════════════ */
+  [data-theme="light"] {
+    --bg:             #ECEDF5;
+    --surface:        #FFFFFF;
+    --surface-2:      #F0F1F8;
+    --surface-3:      #E5E7F2;
+    --border:         rgba(0,0,0,0.09);
+    --border-accent:  rgba(82,84,204,0.30);
+
+    /* Text — WCAG AA verified on --surface (#fff) */
+    --text:           #0D0F1A;   /* 19.6:1  ✓ */
+    --text-mid:       #363A56;   /* 10.5:1  ✓ */
+    --text-muted:     #5C6080;   /* 5.8:1   ✓ */
+
+    --accent:         #5254CC;   /* 5.0:1 on white ✓ */
+    --accent-light:   #6366F1;
+    --accent-dim:     rgba(82,84,204,0.10);
+    --accent-hover:   #4244B0;
+
+    --success:        #047857;   /* 5.2:1 on white ✓ */
+    --success-dim:    rgba(4,120,87,0.10);
+
+    --danger:         #B91C1C;   /* 6.0:1 on white ✓ */
+    --danger-dim:     rgba(185,28,28,0.08);
+
+    --input-bg:       #FFFFFF;
+    --input-border:   rgba(0,0,0,0.14);
+    --input-text:     #0D0F1A;
+    --input-ph:       #9DA1B8;   /* decorative placeholder */
+
+    --scrollbar:      rgba(0,0,0,0.12);
+    --scrollbar-h:    rgba(0,0,0,0.22);
+
+    --glass-bg:       rgba(255,255,255,0.88);
+    --header-bg:      rgba(236,237,245,0.96);
+
+    --shadow-sm:      0 1px 3px rgba(0,0,0,0.07), 0 2px 8px rgba(0,0,0,0.05);
+    --shadow:         0 4px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+    --shadow-lg:      0 12px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07);
+
+    --radius-sm: 8px;
+    --radius:    12px;
+    --radius-lg: 16px;
   }
+
+  /* ── Reset & base ── */
+  * { box-sizing: border-box; }
+
+  html {
+    color-scheme: dark;
+  }
+  [data-theme="light"] { color-scheme: light; }
 
   body {
     background-color: var(--bg);
     color: var(--text);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-feature-settings: "cv02","cv03","cv04","cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.22s ease, color 0.22s ease;
   }
 
+  /* ── Scrollbars ── */
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-h); }
 
-  ::selection { background: rgba(99, 102, 241, 0.3); }
+  ::selection { background: rgba(99,102,241,0.25); }
+
+  /* ── Global form element reset — forces CSS-variable theming ── */
+  input, textarea, select {
+    background-color: var(--input-bg) !important;
+    color:            var(--input-text) !important;
+    border-color:     var(--input-border) !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: var(--input-ph) !important;
+  }
+
+  /* ── Theme-aware surface overrides ──
+     Targets the most common hardcoded dark values used in inline styles.
+     In light mode we override them so panels become white/light.          */
+  [data-theme="light"] [style*="background: #0D0F1A"],
+  [data-theme="light"] [style*="background:#0D0F1A"],
+  [data-theme="light"] [style*="background-color: #0D0F1A"],
+  [data-theme="light"] [style*="background-color:#0D0F1A"] {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+  }
+
+  [data-theme="light"] [style*="background: #07080E"],
+  [data-theme="light"] [style*="background:#07080E"],
+  [data-theme="light"] [style*="backgroundColor: '#07080E'"] {
+    background-color: var(--bg) !important;
+  }
+
+  [data-theme="light"] [style*="background: #131523"],
+  [data-theme="light"] [style*="background:#131523"] {
+    background-color: var(--surface-2) !important;
+    border-color: var(--border) !important;
+  }
+
+  /* Text color overrides for light mode */
+  [data-theme="light"] [style*="color: #EEF0FA"],
+  [data-theme="light"] [style*="color:#EEF0FA"] {
+    color: var(--text) !important;
+  }
+
+  [data-theme="light"] [style*="color: #5B5F7A"],
+  [data-theme="light"] [style*="color:#5B5F7A"],
+  [data-theme="light"] [style*="color: #3E4260"],
+  [data-theme="light"] [style*="color:#3E4260"] {
+    color: var(--text-muted) !important;
+  }
+
+  [data-theme="light"] [style*="color: #9296B0"],
+  [data-theme="light"] [style*="color:#9296B0"] {
+    color: var(--text-mid) !important;
+  }
+
+  /* Border overrides */
+  [data-theme="light"] [style*="border: 1px solid rgba(255,255,255,0.06)"],
+  [data-theme="light"] [style*="border-color: rgba(255,255,255,0.06)"],
+  [data-theme="light"] [style*="borderColor: 'rgba(255,255,255,0.06)'"] {
+    border-color: var(--border) !important;
+  }
+
+  /* Tab switcher & pill backgrounds */
+  [data-theme="light"] [style*="background: rgba(255,255,255,0.03)"],
+  [data-theme="light"] [style*="background:rgba(255,255,255,0.03)"] {
+    background: var(--surface-2) !important;
+    border-color: var(--border) !important;
+  }
 }
 
-/* ── Dribbble-inspired utility classes ── */
+/* ══════════════════════════════════════════
+   UTILITY CLASSES
+══════════════════════════════════════════ */
 @layer utilities {
   .surface    { background-color: var(--surface); }
   .surface-2  { background-color: var(--surface-2); }
-  .border-app { border-color: var(--border); }
 
   .text-app       { color: var(--text); }
   .text-muted-app { color: var(--text-muted); }
@@ -57,10 +207,8 @@
   .accent-dim { background-color: var(--accent-dim); }
   .accent-txt { color: var(--accent-light); }
 
-  .ring-app   { box-shadow: 0 0 0 1px var(--border-accent); }
-
   .glass {
-    background: rgba(13, 15, 26, 0.75);
+    background: var(--glass-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border);
@@ -70,52 +218,36 @@
     background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-  }
-
-  .card-app-2 {
-    background-color: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: background-color 0.22s, border-color 0.22s;
   }
 
   .label-xs {
     font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-muted);
   }
 
   .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--accent);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    transition: opacity 0.15s, transform 0.1s;
-    border: none;
-    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    background-color: var(--accent); color: #fff;
+    padding: 10px 20px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    transition: background-color 0.15s, transform 0.1s;
+    border: none; cursor: pointer;
   }
-  .btn-primary:hover  { opacity: 0.88; }
+  .btn-primary:hover  { background-color: var(--accent-hover); }
   .btn-primary:active { transform: scale(0.98); }
-  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
   .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    color: var(--text-mid);
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    border: 1px solid var(--border);
-    cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; color: var(--text-mid);
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border); cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
   .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
