@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { ExternalLink, FileText, Presentation, ChevronLeft, ChevronRight, Download } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { ExternalLink, FileText, Presentation, ChevronLeft, ChevronRight, Download, Clock, BookOpen, Loader2, RefreshCw } from 'lucide-react'
 import { useAppStore } from '@/store'
 import SlidePreview, { autoLayout, buildContent } from '@/components/zones/zone3/SlideLayouts'
 
@@ -22,11 +22,85 @@ export default function ExportPanel() {
   const [isExportingPdf, setIsExportingPdf] = useState(false)
   const [isExportingPptx, setIsExportingPptx] = useState(false)
 
+  // Zone 5: Pacing & Pitch
+  const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+  interface PacingItem { slide: number; seconds: number; pacing: 'slow' | 'medium' | 'fast'; rationale: string }
+  interface PitchSection { slideRange: string; title: string; narrativeSummary: string; durationSeconds: number; durationPercent: number; toneOfVoice: string; suggestedActions: string[]; keyQuestions: string[] }
+  interface PitchData { overallNarrative: string; totalSeconds: number; sections: PitchSection[] }
+
+  const [pacing, setPacing] = useState<PacingItem[] | null>(null)
+  const [pacingLoading, setPacingLoading] = useState(false)
+  const [pitch, setPitch] = useState<PitchData | null>(null)
+  const [pitchLoading, setPitchLoading] = useState(false)
+
   const { slides } = design
 
   const totalSeconds = narrative.curvePoints.reduce((s, p) => s + (p.durationSeconds ?? 90), 0)
   const approvedCount = slides.filter((s) => s.approved).length
   const reviewStatus = review?.overallStatus ?? 'pending'
+
+  // ── Auto-fetch pacing on mount ──
+  const fetchPacing = useCallback(async () => {
+    if (narrative.curvePoints.length === 0) return
+    setPacingLoading(true)
+    try {
+      const res = await fetch(`${API}/api/v1/zones/zone5/calculate-pacing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          curvePoints: narrative.curvePoints,
+          totalAvailableSeconds: totalSeconds,
+          slideCount: slides.length,
+        }),
+      })
+      const data = await res.json()
+      if (data.pacing) setPacing(data.pacing)
+    } catch (err) {
+      console.error('Pacing fetch error:', err)
+    } finally {
+      setPacingLoading(false)
+    }
+  }, [narrative.curvePoints, totalSeconds, slides.length, API])
+
+  useEffect(() => {
+    if (slides.length > 0 && !pacing && !pacingLoading) fetchPacing()
+  }, [slides.length, pacing, pacingLoading, fetchPacing])
+
+  const fetchPitch = async () => {
+    if (slides.length === 0) return
+    setPitchLoading(true)
+    try {
+      const storyboardSlides = narrative.curvePoints.map((p) => {
+        const pacingItem = pacing?.find((pa) => pa.slide === p.slide)
+        return {
+          slide: p.slide,
+          label: p.label,
+          fullLabel: p.label,
+          type: p.type,
+          emotion: p.emotion,
+          intensity: p.intensity,
+          seconds: pacingItem?.seconds ?? p.durationSeconds ?? 90,
+        }
+      })
+      const res = await fetch(`${API}/api/v1/zones/zone5/generate-pitch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          storyboardSlides,
+          zone1Context: context,
+          narrativeBrief: narrative.narrativeBrief,
+          presentationTitle: title,
+          totalSeconds,
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.pitch) setPitch(data.pitch)
+    } catch (err) {
+      console.error('Pitch fetch error:', err)
+    } finally {
+      setPitchLoading(false)
+    }
+  }
 
   // ── PPTX Export with pptxgenjs ──
   const handleExportPptx = async () => {
@@ -352,6 +426,56 @@ ${review ? (() => {
       </div>
     </div>`
     })() : ''}
+${pitch ? `
+<div style="margin-bottom:32px;">
+  <h2 style="font-size:16px;font-weight:700;margin-bottom:12px;">Guión narrativo</h2>
+  <div style="background:#f5f3ef;border-radius:12px;padding:16px;margin-bottom:16px;">
+    <div style="font-size:10px;font-weight:700;color:#9b9895;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Arco narrativo</div>
+    <p style="font-size:13px;color:#1a1a18;line-height:1.6;margin:0;">${pitch.overallNarrative}</p>
+  </div>
+  ${pitch.sections.map((sec) => `
+  <div style="border:1px solid #e5e2da;border-radius:12px;padding:16px;margin-bottom:12px;page-break-inside:avoid;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span style="background:#1a1a18;color:white;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">${sec.slideRange}</span>
+      <span style="font-size:14px;font-weight:700;color:#1a1a18;">${sec.title}</span>
+      <span style="margin-left:auto;font-size:11px;color:#9b9895;">${formatTime(sec.durationSeconds)} · ${sec.durationPercent}%</span>
+    </div>
+    <p style="font-size:12px;color:#6b6866;line-height:1.5;margin:0 0 12px;">${sec.narrativeSummary}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div style="background:#eff6ff;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;font-weight:700;color:#3b82f6;text-transform:uppercase;margin-bottom:4px;">Tono</div>
+        <p style="font-size:11px;color:#1e3a5f;line-height:1.4;margin:0;">${sec.toneOfVoice}</p>
+      </div>
+      <div style="background:#fffbeb;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;font-weight:700;color:#d97706;text-transform:uppercase;margin-bottom:4px;">Acciones</div>
+        <ul style="margin:0;padding-left:12px;">${sec.suggestedActions.map(a => `<li style="font-size:11px;color:#78350f;line-height:1.4;">${a}</li>`).join('')}</ul>
+      </div>
+      <div style="background:#ecfdf5;border-radius:8px;padding:10px;">
+        <div style="font-size:9px;font-weight:700;color:#059669;text-transform:uppercase;margin-bottom:4px;">Preguntas clave</div>
+        <ul style="margin:0;padding-left:12px;">${sec.keyQuestions.map(q => `<li style="font-size:11px;color:#064e3b;line-height:1.4;">${q}</li>`).join('')}</ul>
+      </div>
+    </div>
+  </div>`).join('')}
+</div>` : ''}
+${pacing ? `
+<div style="margin-bottom:32px;">
+  <h2 style="font-size:16px;font-weight:700;margin-bottom:12px;">Distribución de tiempo</h2>
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <tr style="border-bottom:2px solid #e5e2da;">
+      <th style="text-align:left;padding:6px 8px;font-size:10px;color:#9b9895;font-weight:700;">SLIDE</th>
+      <th style="text-align:left;padding:6px 8px;font-size:10px;color:#9b9895;font-weight:700;">TIEMPO</th>
+      <th style="text-align:left;padding:6px 8px;font-size:10px;color:#9b9895;font-weight:700;">RITMO</th>
+      <th style="text-align:left;padding:6px 8px;font-size:10px;color:#9b9895;font-weight:700;">NOTA</th>
+    </tr>
+    ${pacing.map(p => `
+    <tr style="border-bottom:1px solid #f0ede8;">
+      <td style="padding:6px 8px;font-weight:600;">Slide ${p.slide}</td>
+      <td style="padding:6px 8px;font-family:monospace;">${formatTime(p.seconds)}</td>
+      <td style="padding:6px 8px;"><span style="background:${p.pacing === 'slow' ? '#dbeafe' : p.pacing === 'fast' ? '#fef3c7' : '#f3f4f6'};color:${p.pacing === 'slow' ? '#1e40af' : p.pacing === 'fast' ? '#92400e' : '#374151'};padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;">${p.pacing}</span></td>
+      <td style="padding:6px 8px;color:#6b6866;">${p.rationale}</td>
+    </tr>`).join('')}
+  </table>
+</div>` : ''}
 <h2 style="font-size:16px;font-weight:700;margin-bottom:16px;">Láminas (${slides.length})</h2>
 ${slideRows}
 <p style="margin-top:32px;font-size:10px;color:#b8b4aa;text-align:center;">Generado por StoryVibe AI · ${new Date().toLocaleDateString()}</p>
@@ -430,6 +554,112 @@ ${slideRows}
           Siguiente <ChevronRight size={14} />
         </button>
       </div>
+
+      {/* Pacing per slide */}
+      {pacing && (
+        <div className="rounded-xl border border-neutral-200 bg-white p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Clock size={16} className="text-neutral-500" />
+              <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">Ritmo por slide</span>
+            </div>
+            <button onClick={fetchPacing} disabled={pacingLoading} className="text-[10px] text-neutral-400 hover:text-neutral-600">
+              <RefreshCw size={12} className={pacingLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {pacing.map((p) => {
+              const pacingColor = p.pacing === 'slow' ? 'bg-blue-100 text-blue-700' : p.pacing === 'fast' ? 'bg-amber-100 text-amber-700' : 'bg-neutral-100 text-neutral-600'
+              return (
+                <div key={p.slide} className="flex items-center gap-3 text-xs">
+                  <span className="w-14 shrink-0 font-semibold text-neutral-700">Slide {p.slide}</span>
+                  <div className="flex-1 h-2 bg-neutral-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-neutral-800 rounded-full" style={{ width: `${Math.min(100, (p.seconds / totalSeconds) * slides.length * 100)}%` }} />
+                  </div>
+                  <span className="w-10 text-right font-mono text-neutral-500">{formatTime(p.seconds)}</span>
+                  <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${pacingColor}`}>{p.pacing}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+      {pacingLoading && (
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white p-4">
+          <Loader2 size={16} className="animate-spin text-neutral-400" />
+          <span className="text-xs text-neutral-400">Calculando ritmo…</span>
+        </div>
+      )}
+
+      {/* Pitch narrativo */}
+      {!pitch && !pitchLoading && pacing && (
+        <button
+          onClick={fetchPitch}
+          className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 py-4 text-sm font-semibold text-neutral-600 hover:border-neutral-400 hover:bg-neutral-50 transition-colors"
+        >
+          <BookOpen size={18} />
+          Generar guión narrativo
+        </button>
+      )}
+      {pitchLoading && (
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white p-6">
+          <Loader2 size={16} className="animate-spin text-neutral-400" />
+          <span className="text-xs text-neutral-400">Generando guión narrativo…</span>
+        </div>
+      )}
+      {pitch && (
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BookOpen size={16} className="text-neutral-500" />
+              <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">Guión narrativo</span>
+            </div>
+            <button onClick={fetchPitch} disabled={pitchLoading} className="text-[10px] text-neutral-400 hover:text-neutral-600">
+              <RefreshCw size={12} className={pitchLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+          {/* Overall narrative */}
+          <div className="rounded-xl bg-neutral-50 border border-neutral-100 p-4">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-2">Arco narrativo</div>
+            <p className="text-sm text-neutral-700 leading-relaxed">{pitch.overallNarrative}</p>
+          </div>
+          {/* Sections */}
+          <div className="space-y-3">
+            {pitch.sections.map((sec, i) => (
+              <div key={i} className="rounded-xl border border-neutral-100 p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="rounded-md bg-neutral-900 px-2 py-0.5 text-[10px] font-bold text-white">{sec.slideRange}</span>
+                  <span className="text-sm font-semibold text-neutral-800">{sec.title}</span>
+                  <span className="ml-auto text-[10px] text-neutral-400">{formatTime(sec.durationSeconds)} · {sec.durationPercent}%</span>
+                </div>
+                <p className="text-xs text-neutral-600 leading-relaxed mb-3">{sec.narrativeSummary}</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-lg bg-blue-50/60 p-2.5">
+                    <div className="text-[9px] font-bold uppercase text-blue-500 mb-1">Tono</div>
+                    <p className="text-[11px] text-blue-800 leading-snug">{sec.toneOfVoice}</p>
+                  </div>
+                  <div className="rounded-lg bg-amber-50/60 p-2.5">
+                    <div className="text-[9px] font-bold uppercase text-amber-600 mb-1">Acciones</div>
+                    <ul className="space-y-0.5">
+                      {sec.suggestedActions.map((a, j) => (
+                        <li key={j} className="text-[11px] text-amber-800 leading-snug">• {a}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="rounded-lg bg-emerald-50/60 p-2.5">
+                    <div className="text-[9px] font-bold uppercase text-emerald-600 mb-1">Preguntas clave</div>
+                    <ul className="space-y-0.5">
+                      {sec.keyQuestions.map((q, j) => (
+                        <li key={j} className="text-[11px] text-emerald-800 leading-snug">• {q}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Export buttons */}
       <div className="grid grid-cols-3 gap-3">

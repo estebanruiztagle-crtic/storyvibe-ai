@@ -1,24 +1,9 @@
 import { Router, Request, Response } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
+import type { CurvePoint, PacingResult, StoryboardSlideInput, PitchSection, PitchData } from '../../types'
 
 const router = Router()
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface CurvePoint {
-  slide: number
-  label: string
-  type: 'peak' | 'valley' | 'transition'
-  emotion: string
-  intensity: number
-}
-
-interface PacingResult {
-  slide: number
-  seconds: number
-  pacing: 'slow' | 'medium' | 'fast'
-  rationale: string
-}
 
 // ─── POST /calculate-pacing ───────────────────────────────────────────────────
 // Given curve points + total time, suggest seconds allocation per slide
@@ -142,32 +127,7 @@ Asegúrate que la suma exacta sea ${totalAvailableSeconds} segundos.`,
 // ─── POST /generate-pitch ─────────────────────────────────────────────────────
 // Generates the narrative pitch: overall story + per-section timing + delivery tips
 
-interface StoryboardSlideInput {
-  slide: number
-  label: string
-  fullLabel: string
-  type: 'peak' | 'valley' | 'transition'
-  emotion: string
-  intensity: number
-  seconds: number
-}
-
-interface PitchSection {
-  slideRange: string
-  title: string
-  narrativeSummary: string
-  durationSeconds: number
-  durationPercent: number
-  toneOfVoice: string
-  suggestedActions: string[]
-  keyQuestions: string[]
-}
-
-interface PitchData {
-  overallNarrative: string
-  totalSeconds: number
-  sections: PitchSection[]
-}
+// Types imported from ../../types
 
 const GENERATE_PITCH_SYSTEM = `Eres un coach experto en storytelling y presentaciones de alto impacto.
 IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.

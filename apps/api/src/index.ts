@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import rateLimit from 'express-rate-limit'
 
 import path from 'path'
 import { healthRouter } from './routes/health'
@@ -39,6 +40,16 @@ app.use(
 )
 app.use(express.json({ limit: '15mb' }))
 app.use(express.urlencoded({ extended: true, limit: '15mb' }))
+
+// Rate limiting — AI endpoints are expensive, protect against abuse
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 12, // max 12 AI calls per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes. Espera un momento e intenta de nuevo.' },
+})
+app.use('/api/v1/zones', aiLimiter)
 
 // Routes
 app.use('/api/v1/health', healthRouter)

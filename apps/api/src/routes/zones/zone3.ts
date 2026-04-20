@@ -4,21 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 const router = Router()
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-type PointType = 'peak' | 'valley' | 'transition'
-
-interface CurvePoint {
-  slide: number
-  label: string
-  fullLabel: string
-  type: PointType
-  emotion: string
-  intensity: number
-  suggestedTitle?: string
-  contentDirection?: string
-  keyMessage?: string
-  designStyle?: string
-}
+import type { CurvePoint, PointType } from '../../types'
 
 // ─── Helper: extract JSON from Claude response ────────────────────────────────
 function extractJson(raw: string): string {

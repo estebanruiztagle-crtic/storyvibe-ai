@@ -49,27 +49,8 @@ interface StorytellingFramework {
   risk: string
 }
 
-interface CurvePoint {
-  slide: number
-  label: string
-  fullLabel: string
-  type: 'peak' | 'valley' | 'transition'
-  emotion: string
-  intensity: number
-  topicType: string
-  systemType: 'peak' | 'valley' | 'transition'
-  systemEmotion: string
-  systemIntensity: number
-  modified: boolean
-  mappingRules: string[]
-  // Act #3 design contract
-  suggestedTitle?: string
-  contentDirection?: string
-  designStyle?: 'hero' | 'data' | 'quote' | 'list' | 'image' | 'comparison' | 'split' | 'timeline'
-  visualMood?: 'dark_bold' | 'light_clean' | 'data_heavy' | 'conceptual' | 'emotional' | 'neutral'
-  speakerNotes?: string
-  durationSeconds?: number
-}
+// CurvePoint imported from shared types
+import type { CurvePoint } from '../../types'
 
 // ─── Helper: extract JSON from Claude response ────────────────────────────────
 function extractJson(raw: string): string {

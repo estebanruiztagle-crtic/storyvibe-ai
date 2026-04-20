@@ -4,34 +4,119 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --bg:          #07080E;
+    --surface:     #0D0F1A;
+    --surface-2:   #131523;
+    --border:      rgba(255, 255, 255, 0.07);
+    --border-accent: rgba(99, 102, 241, 0.25);
+    --text:        #EEF0FA;
+    --text-muted:  #5B5F7A;
+    --text-mid:    #9296B0;
+    --accent:      #6366F1;
+    --accent-light: #818CF8;
+    --accent-dim:  rgba(99, 102, 241, 0.12);
+    --success:     #34D399;
+    --success-dim: rgba(52, 211, 153, 0.1);
+    --danger:      #F87171;
+    --radius-sm:   8px;
+    --radius:      12px;
+    --radius-lg:   16px;
   }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+
+  ::selection { background: rgba(99, 102, 241, 0.3); }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+/* ── Dribbble-inspired utility classes ── */
+@layer utilities {
+  .surface    { background-color: var(--surface); }
+  .surface-2  { background-color: var(--surface-2); }
+  .border-app { border-color: var(--border); }
+
+  .text-app       { color: var(--text); }
+  .text-muted-app { color: var(--text-muted); }
+  .text-mid-app   { color: var(--text-mid); }
+
+  .accent-bg  { background-color: var(--accent); }
+  .accent-dim { background-color: var(--accent-dim); }
+  .accent-txt { color: var(--accent-light); }
+
+  .ring-app   { box-shadow: 0 0 0 1px var(--border-accent); }
+
+  .glass {
+    background: rgba(13, 15, 26, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
   }
-  body {
-    @apply bg-background text-foreground;
+
+  .card-app {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   }
+
+  .card-app-2 {
+    background-color: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .label-xs {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--accent);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: opacity 0.15s, transform 0.1s;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-primary:hover  { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--text-mid);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-ghost:hover { background: var(--surface-2); color: var(--text); }
 }

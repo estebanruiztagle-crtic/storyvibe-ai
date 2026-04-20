@@ -5,15 +5,15 @@ import { motion } from 'framer-motion'
 import {
   MessageSquareText,
   BookOpen,
-  Palette,
+  Layers,
   CheckCircle,
   Download,
 } from 'lucide-react'
 
 const STEPS = [
-  { key: 'context',   label: 'Contexto',   icon: MessageSquareText, path: 'context' },
+  { key: 'context',   label: 'Diagnóstico', icon: MessageSquareText, path: 'context' },
   { key: 'narrative', label: 'Narrativa',   icon: BookOpen,          path: 'narrative' },
-  { key: 'design',    label: 'Diseño',      icon: Palette,           path: 'design' },
+  { key: 'design',    label: 'Diseño',      icon: Layers,            path: 'design' },
   { key: 'review',    label: 'Evaluación',  icon: CheckCircle,       path: 'review' },
   { key: 'export',    label: 'Exportar',    icon: Download,          path: 'export' },
 ] as const
@@ -38,67 +38,89 @@ export default function WizardShell({
   const current = getCurrentStep(pathname)
 
   return (
-    <div className="flex h-screen flex-col" style={{ backgroundColor: '#FAF9F7' }}>
+    <div
+      style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#07080E' }}
+    >
       {/* ── Top bar ── */}
-      <header className="flex items-center justify-between border-b border-neutral-200/60 px-6 py-3">
+      <header style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 24px',
+        height: 52,
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        backgroundColor: 'rgba(7,8,14,0.95)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        position: 'sticky', top: 0, zIndex: 50,
+      }}>
+        {/* Logo */}
         <button
           onClick={() => router.push('/')}
-          className="text-sm font-semibold tracking-tight text-neutral-800 hover:text-neutral-600 transition-colors"
+          style={{
+            fontSize: 13, fontWeight: 700, color: '#EEF0FA',
+            letterSpacing: '-0.02em', background: 'none', border: 'none',
+            cursor: 'pointer', padding: 0,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}
         >
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 24, height: 24, borderRadius: 6,
+            background: '#6366F1', fontSize: 11, fontWeight: 800, color: '#fff',
+          }}>S</span>
           StoryVibe AI
         </button>
 
-        {/* ── Step indicators ── */}
-        <nav className="flex items-center gap-1">
+        {/* Step nav */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           {STEPS.map((step, i) => {
             const Icon = step.icon
             const isActive = i === current
-            const isDone = i < current
+            const isDone   = i < current
+            const isFuture = i > current
 
             return (
               <button
                 key={step.key}
-                onClick={() =>
-                  router.push(`/project/${projectId}/${step.path}`)
-                }
-                className={`
-                  relative flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all duration-200
-                  ${isActive
-                    ? 'bg-neutral-900 text-white shadow-sm'
-                    : isDone
-                      ? 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-                      : 'text-neutral-400 hover:text-neutral-500'}
-                `}
+                onClick={() => router.push(`/project/${projectId}/${step.path}`)}
+                style={{
+                  position: 'relative',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '6px 12px',
+                  borderRadius: 8,
+                  fontSize: 12, fontWeight: isActive ? 600 : 500,
+                  color: isActive ? '#fff' : isDone ? '#9296B0' : '#3E4260',
+                  background: isActive ? '#6366F1' : 'transparent',
+                  border: 'none', cursor: 'pointer',
+                  transition: 'color 0.15s, background 0.15s',
+                  opacity: isFuture ? 0.5 : 1,
+                }}
               >
-                <Icon size={14} strokeWidth={isActive ? 2.2 : 1.8} />
+                <Icon size={13} strokeWidth={isActive ? 2.2 : 1.8} />
+                <span style={{ display: 'none' }} className="sm:inline">{step.label}</span>
                 <span className="hidden sm:inline">{step.label}</span>
-                {isActive && (
-                  <motion.div
-                    layoutId="step-pill"
-                    className="absolute inset-0 rounded-full bg-neutral-900 -z-10"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
+                {isDone && (
+                  <span style={{ fontSize: 9, color: '#34D399' }}>✓</span>
                 )}
               </button>
             )
           })}
         </nav>
 
-        <div className="w-20" /> {/* spacer for balance */}
+        <div style={{ width: 88 }} />
       </header>
 
       {/* ── Progress bar ── */}
-      <div className="h-0.5 bg-neutral-100">
+      <div style={{ height: 2, background: 'rgba(255,255,255,0.04)' }}>
         <motion.div
-          className="h-full bg-neutral-900"
+          style={{ height: '100%', background: 'linear-gradient(90deg, #6366F1, #818CF8)' }}
           initial={false}
           animate={{ width: `${((current + 1) / STEPS.length) * 100}%` }}
-          transition={{ duration: 0.4, ease: 'easeInOut' }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
         />
       </div>
 
       {/* ── Content ── */}
-      <main className="flex-1 overflow-y-auto">
+      <main style={{ flex: 1, overflowY: 'auto' }}>
         {children}
       </main>
     </div>

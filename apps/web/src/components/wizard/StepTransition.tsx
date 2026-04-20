@@ -3,9 +3,9 @@
 import { motion } from 'framer-motion'
 
 const variants = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
-  exit:    { opacity: 0, y: -12 },
+  exit:    { opacity: 0, y: -10 },
 }
 
 export default function StepTransition({
@@ -21,8 +21,8 @@ export default function StepTransition({
       initial="initial"
       animate="animate"
       exit="exit"
-      transition={{ duration: 0.3, ease: 'easeOut' }}
-      className={`mx-auto w-full max-w-4xl px-6 py-10 ${className}`}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className={`mx-auto w-full max-w-4xl px-6 py-8 ${className}`}
     >
       {children}
     </motion.div>
