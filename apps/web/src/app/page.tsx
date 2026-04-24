@@ -1,11 +1,11 @@
 import Link from 'next/link'
 
 const STEPS = [
-  { num: '01', label: 'Diagnóstico',   desc: 'Contexto y audiencia',    color: '#818CF8' },
-  { num: '02', label: 'Narrativa',     desc: 'Arco en tres actos',      color: '#34D399' },
-  { num: '03', label: 'Diseño',        desc: 'Láminas y layouts',       color: '#F472B6' },
-  { num: '04', label: 'Evaluación',    desc: 'Critique con IA',         color: '#FBBF24' },
-  { num: '05', label: 'Exportar',      desc: 'PPTX / PDF listo',        color: '#60A5FA' },
+  { num: '01', label: 'Diagnóstico', color: '#818CF8' },
+  { num: '02', label: 'Narrativa',   color: '#34D399' },
+  { num: '03', label: 'Diseño',      color: '#F472B6' },
+  { num: '04', label: 'Evaluación',  color: '#FBBF24' },
+  { num: '05', label: 'Exportar',    color: '#60A5FA' },
 ]
 
 export default function Home() {
@@ -13,7 +13,7 @@ export default function Home() {
     <main
       style={{
         minHeight: '100vh',
-        backgroundColor: '#07080E',
+        backgroundColor: 'var(--bg)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -22,6 +22,7 @@ export default function Home() {
         position: 'relative',
         overflow: 'hidden',
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+        transition: 'background-color 0.22s ease',
       }}
     >
       {/* ── Ambient glow ── */}
@@ -36,7 +37,7 @@ export default function Home() {
       {/* ── Dot grid ── */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none',
-        backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)',
+        backgroundImage: 'radial-gradient(circle, rgba(128,128,128,0.12) 1px, transparent 1px)',
         backgroundSize: '32px 32px',
         maskImage: 'radial-gradient(ellipse 80% 60% at center, black 30%, transparent 100%)',
         WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at center, black 30%, transparent 100%)',
@@ -46,12 +47,13 @@ export default function Home() {
       <div style={{ position: 'relative', zIndex: 2, marginBottom: 48 }}>
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
-          background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)',
+          background: 'var(--accent-dim)',
+          border: '1px solid var(--border-accent)',
           borderRadius: 100, padding: '5px 14px',
-          fontSize: 11, fontWeight: 600, color: '#818CF8',
+          fontSize: 11, fontWeight: 600, color: 'var(--accent-light)',
           letterSpacing: '0.06em', textTransform: 'uppercase',
         }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#818CF8', display: 'inline-block' }} />
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--accent-light)', display: 'inline-block' }} />
           Powered by Claude AI
         </span>
       </div>
@@ -63,13 +65,13 @@ export default function Home() {
           fontWeight: 800,
           lineHeight: 0.92,
           letterSpacing: '-0.04em',
-          color: '#EEF0FA',
+          color: 'var(--text)',
           margin: 0,
         }}>
           Story
-          <span style={{ color: '#6366F1' }}>Vibe</span>
+          <span style={{ color: 'var(--accent-light)' }}>Vibe</span>
           <br />
-          <span style={{ fontSize: '0.62em', fontWeight: 500, color: '#5B5F7A', letterSpacing: '-0.02em' }}>
+          <span style={{ fontSize: '0.62em', fontWeight: 500, color: 'var(--text-muted)', letterSpacing: '-0.02em' }}>
             AI
           </span>
         </h1>
@@ -77,10 +79,10 @@ export default function Home() {
 
       {/* ── Tagline ── */}
       <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', marginBottom: 48 }}>
-        <p style={{ fontSize: 17, fontWeight: 500, color: '#9296B0', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
+        <p style={{ fontSize: 17, fontWeight: 500, color: 'var(--text-mid)', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
           Transforma cualquier contenido en un pitch deck extraordinario
         </p>
-        <p style={{ fontSize: 13, color: '#3E4260', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
           Narrativa en tres actos · Diseño por IA · Exporta en PPTX
         </p>
       </div>
@@ -91,11 +93,11 @@ export default function Home() {
           href="/project/new/context"
           style={{
             display: 'inline-flex', alignItems: 'center', gap: 10,
-            backgroundColor: '#6366F1', color: '#fff',
+            backgroundColor: 'var(--accent)', color: '#fff',
             padding: '14px 32px', borderRadius: 10,
             fontSize: 14, fontWeight: 700, textDecoration: 'none',
             letterSpacing: '-0.01em',
-            boxShadow: '0 0 40px rgba(99,102,241,0.4), 0 2px 8px rgba(0,0,0,0.4)',
+            boxShadow: '0 0 40px rgba(99,102,241,0.35), 0 2px 8px rgba(0,0,0,0.3)',
             transition: 'opacity 0.15s',
           }}
         >
@@ -111,9 +113,11 @@ export default function Home() {
         position: 'relative', zIndex: 2,
         display: 'flex', gap: 2, flexWrap: 'nowrap',
         padding: '4px',
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
         borderRadius: 14,
+        boxShadow: 'var(--shadow-sm)',
+        transition: 'background 0.22s, border-color 0.22s',
       }}>
         {STEPS.map((step, i) => (
           <div key={step.num} style={{
@@ -122,18 +126,18 @@ export default function Home() {
           }}>
             <div style={{
               width: 6, height: 6, borderRadius: '50%',
-              backgroundColor: step.color, flexShrink: 0, opacity: 0.85,
+              backgroundColor: step.color, flexShrink: 0, opacity: 0.9,
             }} />
             <div>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#3E4260', letterSpacing: '0.1em', textTransform: 'uppercase', lineHeight: 1 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', lineHeight: 1 }}>
                 {step.num}
               </div>
-              <div style={{ fontSize: 12, fontWeight: 600, color: '#9296B0', lineHeight: 1.3, marginTop: 2 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-mid)', lineHeight: 1.3, marginTop: 2 }}>
                 {step.label}
               </div>
             </div>
             {i < STEPS.length - 1 && (
-              <div style={{ width: 16, borderTop: '1px solid rgba(255,255,255,0.06)', marginLeft: 4 }} />
+              <div style={{ width: 16, borderTop: '1px solid var(--border)', marginLeft: 4 }} />
             )}
           </div>
         ))}
