@@ -401,7 +401,8 @@ Los campos marcados con "?" están pendientes de recopilar.`
     })
   } catch (error) {
     console.error('Zone1 diagnose error:', error)
-    res.status(500).json({ success: false, error: 'Error en el agente de diagnóstico' })
+    const errMsg = error instanceof Error ? error.message : String(error)
+    res.status(500).json({ success: false, error: 'Error en el agente de diagnóstico', _debug: errMsg })
   }
 })
 
