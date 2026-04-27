@@ -265,7 +265,7 @@ Los campos marcados con "?" están pendientes de recopilar.`
     }
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       system: ZONE1_SYSTEM_PROMPT,
       messages,
@@ -560,7 +560,7 @@ router.post('/analyze-source', async (req: Request, res: Response): Promise<void
       const base64Data = base64Match[2]!
 
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-5-20250929',
+        model: 'claude-sonnet-4-6',
         max_tokens: 600,
         messages: [
           {

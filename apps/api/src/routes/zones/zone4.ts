@@ -236,7 +236,7 @@ CURRENT SLIDE STATE:
 Please evaluate this slide across all 3 axes and generate concrete suggestions for improvement. Focus on actionable, specific feedback appropriate for the slide's emotional role (${slideReview.type}) and intensity (${slideReview.intensity}/10).`
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2000,
       system: SYSTEM_PROMPT,
       messages: [
@@ -583,7 +583,7 @@ ${JSON.stringify({
 Rediseña la curva narrativa para llevar el score promedio de ${avgComposite.toFixed(1)} a por lo menos 7.5/10. Enfócate en los cambios de mayor impacto con el menor número de modificaciones posible.`
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4000,
       system: REDESIGN_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userMessage }],

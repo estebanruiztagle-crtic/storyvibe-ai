@@ -25,7 +25,7 @@ router.post('/generate-palette', async (req: Request, res: Response) => {
     }
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       system: `Eres un director de arte especializado en presentaciones corporativas de alto impacto.
 IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
@@ -106,7 +106,7 @@ router.post('/suggest-graphics', async (req: Request, res: Response) => {
     }
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 5000,
       system: `Eres un director creativo experto en pitch decks ejecutivos y storytelling visual.
 IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
@@ -216,7 +216,7 @@ router.post('/generate-title', async (req: Request, res: Response) => {
     }
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 80,
       system: `Eres un experto en copywriting para presentaciones corporativas de alto impacto.
 IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
@@ -292,7 +292,7 @@ router.post('/generate-image', async (req: Request, res: Response) => {
 
     // ── Step 1: Claude crafts an optimised Recraft prompt ──────────────────
     const promptResponse = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 300,
       system: `You are an expert at writing image generation prompts for Recraft v3, specialised in high-impact visuals for corporate presentations.
 

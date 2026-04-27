@@ -114,7 +114,7 @@ router.post('/suggest-topics', async (req: Request, res: Response) => {
     const contextSummary = JSON.stringify(zone1Context ?? {}, null, 2)
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 2500,
       system: SUGGEST_TOPICS_PROMPT,
       messages: [
@@ -263,7 +263,7 @@ router.post('/suggest-frameworks', async (req: Request, res: Response) => {
     const contextSummary = JSON.stringify(zone1Context ?? {}, null, 2)
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 3000,
       system: SUGGEST_FRAMEWORKS_PROMPT,
       messages: [
@@ -454,7 +454,7 @@ router.post('/generate-curve', async (req: Request, res: Response) => {
     const frameworkSummary = JSON.stringify(framework ?? {}, null, 2)
 
     const response = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-5-20250929',
+      model: 'claude-sonnet-4-6',
       max_tokens: 6000,
       system: GENERATE_CURVE_PROMPT,
       messages: [
