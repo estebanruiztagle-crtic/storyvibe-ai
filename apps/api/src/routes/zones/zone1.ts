@@ -402,7 +402,13 @@ Los campos marcados con "?" están pendientes de recopilar.`
   } catch (error) {
     console.error('Zone1 diagnose error:', error)
     const errMsg = error instanceof Error ? error.message : String(error)
-    res.status(500).json({ success: false, error: 'Error en el agente de diagnóstico', _debug: errMsg })
+    const isCredits = errMsg.includes('credit balance')
+    res.status(500).json({
+      success: false,
+      error: isCredits
+        ? 'Cuenta de Anthropic sin créditos. Recarga en console.anthropic.com → Plans & Billing.'
+        : 'Error en el agente de diagnóstico',
+    })
   }
 })
 
