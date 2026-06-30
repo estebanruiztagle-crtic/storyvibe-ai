@@ -18,6 +18,12 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 const app = express()
+
+// Running behind Vercel's proxy: trust the first hop so express-rate-limit
+// can read the real client IP from X-Forwarded-For
+// (fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and makes per-IP limiting work)
+app.set('trust proxy', 1)
+
 const PORT = process.env['PORT'] ?? 3001
 
 // Support comma-separated list of allowed origins via ALLOWED_ORIGINS env var
