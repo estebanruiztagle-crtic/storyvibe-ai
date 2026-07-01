@@ -32,29 +32,20 @@ export interface PacingResult {
   rationale: string
 }
 
-export interface PitchSection {
-  slideRange: string
+export interface ScriptSection {
+  beatRange: string
   title: string
-  narrativeSummary: string
+  keyMessage: string
+  whatToTell: string
+  toneOfVoice: string
+  transition: string
+  keyQuestions: string[]
   durationSeconds: number
   durationPercent: number
-  toneOfVoice: string
-  suggestedActions: string[]
-  keyQuestions: string[]
 }
 
-export interface PitchData {
+export interface ScriptData {
   overallNarrative: string
   totalSeconds: number
-  sections: PitchSection[]
-}
-
-export interface StoryboardSlideInput {
-  slide: number
-  label: string
-  fullLabel: string
-  type: PointType
-  emotion: string
-  intensity: number
-  seconds: number
+  sections: ScriptSection[]
 }

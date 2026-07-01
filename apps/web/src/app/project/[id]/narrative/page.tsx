@@ -53,10 +53,10 @@ export default function NarrativeStep() {
           <motion.button
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            onClick={() => router.push(`/project/${id}/design`)}
+            onClick={() => router.push(`/project/${id}/export`)}
             className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
           >
-            Diseño <ArrowRight size={14} />
+            Guión & Exportar <ArrowRight size={14} />
           </motion.button>
         )}
       </div>

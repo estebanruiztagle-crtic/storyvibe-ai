@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import Anthropic from '@anthropic-ai/sdk'
-import type { CurvePoint, PacingResult, StoryboardSlideInput, PitchSection, PitchData } from '../../types'
+import type { CurvePoint, PacingResult, ScriptData } from '../../types'
 
 const router = Router()
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -124,100 +124,119 @@ Asegúrate que la suma exacta sea ${totalAvailableSeconds} segundos.`,
   }
 })
 
-// ─── POST /generate-pitch ─────────────────────────────────────────────────────
-// Generates the narrative pitch: overall story + per-section timing + delivery tips
+// ─── POST /generate-script ────────────────────────────────────────────────────
+// Generates the narrative script from the story beats + diagnosis (NO design deps).
+// Output: structured, enriched sections meant as a brief for building the deck
+// afterwards in Claude Design.
 
-// Types imported from ../../types
-
-const GENERATE_PITCH_SYSTEM = `Eres un coach experto en storytelling y presentaciones de alto impacto.
+const GENERATE_SCRIPT_SYSTEM = `Eres un coach experto en storytelling y presentaciones de alto impacto.
 IDIOMA: Español latinoamericano neutro (NO argentino, NO español de España). Usa "tú" siempre.
-Tu tarea es generar el PITCH NARRATIVO de una presentación: cómo el presentador debe contar la historia de principio a fin.
 
-Agrupa las slides en 3-5 secciones narrativas (no necesariamente una por slide). Cada sección debe tener:
-- slideRange: rango de slides (ej: "Slides 1-2")
-- title: nombre de la sección (ej: "Apertura — El Problema", "Desarrollo — La Solución", "Cierre — La Llamada a la Acción")
-- narrativeSummary: 2-3 oraciones explicando qué historia se cuenta en esta sección y por qué importa narrativamente
-- durationSeconds: suma exacta de los segundos de las slides incluidas
-- durationPercent: porcentaje sobre el total (redondear a entero)
-- toneOfVoice: descripción concreta del tono que debe usar el presentador en esta sección (ej: "Íntimo y directo, como si hablaras con una sola persona del público. Habla despacio, haz pausas después de las preguntas.")
-- suggestedActions: array de 2-4 acciones físicas o retóricas concretas (ej: "Camina hacia el público al iniciar esta sección", "Señala los datos con el puntero sin leerlos en voz alta", "Haz una pausa de 3 segundos antes de revelar la cifra")
-- keyQuestions: array de 1-3 preguntas que el presentador puede hacer (en voz alta o retóricamente) para conectar con el objetivo de esa parte (ej: "¿Cuántos de ustedes han vivido este problema?", "¿Qué pasaría si pudiéramos reducir ese costo a la mitad?")
+Tu tarea es generar el GUION NARRATIVO de una presentación a partir de sus BEATS (momentos narrativos) y el diagnóstico de contexto. Este guion NO es sobre diseño de láminas: es la historia hablada que guiará a quien luego arme la presentación.
 
-Además, genera:
-- overallNarrative: un párrafo de 4-6 oraciones que describe el arco narrativo completo de la presentación como si fuera el "pitch del pitch" — la historia que el presentador debe tener en la cabeza antes de subir al escenario. Debe ser inspirador, específico y accionable.
+Agrupa los beats en 3-5 SECCIONES narrativas coherentes (no una por beat). Cada sección debe tener:
+- beatRange: rango de beats que abarca (ej: "Beats 1-2")
+- title: nombre de la sección con su función dramática (ej: "Apertura — El Problema", "Desarrollo — La Evidencia", "Cierre — La Llamada a la Acción")
+- keyMessage: UNA sola frase con la idea central que la audiencia debe retener de esta sección
+- whatToTell: 2-4 oraciones concretas sobre QUÉ contar aquí (el contenido narrativo: qué historia, qué datos, qué ejemplo). Accionable, no genérico.
+- toneOfVoice: cómo debe sonar el presentador en esta sección (ritmo, energía, actitud)
+- transition: 1 oración con la frase o idea puente para pasar a la siguiente sección de forma fluida
+- keyQuestions: array de 1-3 preguntas (reales o retóricas) que conectan con el objetivo de esta parte
+- durationSeconds: suma aproximada de los segundos de los beats incluidos
+- durationPercent: porcentaje entero sobre el total
 
-IMPORTANTE: los durationPercent de todas las secciones deben sumar 100. Los durationSeconds deben sumar exactamente el total de segundos disponible.
+Además genera:
+- overallNarrative: párrafo de 4-6 oraciones con el arco completo — "la historia que el presentador debe tener en la cabeza antes de subir al escenario". Inspirador, específico y accionable.
+
+IMPORTANTE: los durationPercent deben sumar 100. Los durationSeconds deben sumar aproximadamente el total disponible.
 
 Responde ÚNICAMENTE con JSON válido:
 {
   "overallNarrative": "...",
   "totalSeconds": <number>,
-  "sections": [PitchSection, ...]
+  "sections": [
+    {"beatRange": "...", "title": "...", "keyMessage": "...", "whatToTell": "...", "toneOfVoice": "...", "transition": "...", "keyQuestions": ["..."], "durationSeconds": <number>, "durationPercent": <number>}
+  ]
 }`
 
-router.post('/generate-pitch', async (req: Request, res: Response): Promise<void> => {
+router.post('/generate-script', async (req: Request, res: Response): Promise<void> => {
   try {
     const {
-      storyboardSlides,
+      curvePoints,
       zone1Context,
       narrativeBrief,
+      frameworkName,
+      selectedTopics,
       presentationTitle,
-      totalSeconds,
+      totalSeconds: totalSecondsRaw,
     } = req.body as {
-      storyboardSlides: StoryboardSlideInput[]
+      curvePoints: CurvePoint[]
       zone1Context?: Record<string, unknown>
       narrativeBrief?: string
+      frameworkName?: string
+      selectedTopics?: string[]
       presentationTitle?: string
-      totalSeconds: number
+      totalSeconds?: number
     }
 
-    if (!storyboardSlides || storyboardSlides.length === 0) {
-      res.status(400).json({ success: false, error: 'storyboardSlides requeridas' })
+    if (!curvePoints || curvePoints.length === 0) {
+      res.status(400).json({ success: false, error: 'curvePoints (beats) requeridos' })
       return
     }
 
-    const slideSummary = storyboardSlides
-      .map(s =>
-        `Slide ${s.slide} (${s.seconds}s · ${Math.round((s.seconds / totalSeconds) * 100)}%): "${s.fullLabel || s.label}" | tipo: ${s.type} | emoción: ${s.emotion} | intensidad: ${s.intensity}/10`
-      )
+    const totalSeconds = totalSecondsRaw
+      ?? curvePoints.reduce((s, p) => s + (p.durationSeconds ?? 90), 0)
+
+    const beatSummary = curvePoints
+      .map((p) => {
+        const secs = p.durationSeconds ?? Math.round(totalSeconds / curvePoints.length)
+        const extra = p.contentDirection ?? p.speakerNotes ?? ''
+        return `Beat ${p.slide} (${secs}s): "${p.fullLabel || p.label}" | tipo: ${p.type} | emoción: ${p.emotion} | intensidad: ${p.intensity}/10${extra ? ` | nota: ${extra}` : ''}`
+      })
       .join('\n')
 
     const contextStr = zone1Context
-      ? `Objetivo: ${(zone1Context.objective as Record<string,string>)?.primary ?? '—'}
-Audiencia: ${(zone1Context.audience as Record<string,string>)?.emotionalBaseline ?? '—'}
-Tono: ${(zone1Context.tone as Record<string,string>)?.primary ?? '—'}
-Apertura: ${(zone1Context.tone as Record<string,Record<string,string>>)?.arc?.opening ?? '—'}
-Cierre: ${(zone1Context.tone as Record<string,Record<string,string>>)?.arc?.closing ?? '—'}`
+      ? `Objetivo: ${(zone1Context.objective as Record<string, string>)?.primary ?? '—'}
+Acción deseada: ${(zone1Context.objective as Record<string, string>)?.desiredAction ?? '—'}
+Audiencia (baseline emocional): ${(zone1Context.audience as Record<string, string>)?.emotionalBaseline ?? '—'}
+Tono: ${(zone1Context.tone as Record<string, string>)?.primary ?? '—'}
+Apertura: ${(zone1Context.tone as Record<string, Record<string, string>>)?.arc?.opening ?? '—'}
+Cierre: ${(zone1Context.tone as Record<string, Record<string, string>>)?.arc?.closing ?? '—'}`
+      : ''
+
+    const topicsStr = selectedTopics && selectedTopics.length > 0
+      ? `\nTópicos clave: ${selectedTopics.join(', ')}`
       : ''
 
     const response = await getAnthropic().messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 4000,
-      system: GENERATE_PITCH_SYSTEM,
+      system: GENERATE_SCRIPT_SYSTEM,
       messages: [
         {
           role: 'user',
-          content: `Genera el pitch narrativo completo para esta presentación.
+          content: `Genera el guion narrativo completo para esta presentación.
 
 Título: "${presentationTitle || 'Presentación'}"
+Framework narrativo: ${frameworkName || '(no especificado)'}
 Arco narrativo: ${narrativeBrief || '(no disponible)'}
-Tiempo total: ${totalSeconds}s (${Math.round(totalSeconds / 60)} min)
+Tiempo total: ${totalSeconds}s (${Math.round(totalSeconds / 60)} min)${topicsStr}
 
 ${contextStr}
 
-SLIDES (con tiempos asignados):
-${slideSummary}
+BEATS (momentos narrativos):
+${beatSummary}
 
-Agrupa las slides en 3-5 secciones narrativas con coherencia dramática.`,
+Agrupa los beats en 3-5 secciones narrativas con coherencia dramática.`,
         },
       ],
     })
 
     const raw = response.content[0]?.type === 'text' ? response.content[0].text : ''
     const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON in pitch response')
+    if (!jsonMatch) throw new Error('No JSON in script response')
 
-    const parsed = JSON.parse(jsonMatch[0]) as PitchData
+    const parsed = JSON.parse(jsonMatch[0]) as ScriptData
 
     // Normalize percentages to sum 100
     const pctSum = parsed.sections.reduce((s, sec) => s + sec.durationPercent, 0)
@@ -232,56 +251,63 @@ Agrupa las slides en 3-5 secciones narrativas con coherencia dramática.`,
       })
     }
 
-    res.json({ success: true, pitch: parsed })
+    res.json({ success: true, script: parsed })
   } catch (err) {
-    console.error('[zone5/generate-pitch]', err)
+    console.error('[zone5/generate-script]', err)
 
-    // Fallback: simple 3-section split
-    const slides = req.body.storyboardSlides as StoryboardSlideInput[] ?? []
-    const total = req.body.totalSeconds as number ?? slides.reduce((s: number, sl: StoryboardSlideInput) => s + sl.seconds, 0)
-    const third = Math.floor(slides.length / 3)
-    const secs1 = slides.slice(0, third).reduce((s: number, sl: StoryboardSlideInput) => s + sl.seconds, 0)
-    const secs2 = slides.slice(third, third * 2).reduce((s: number, sl: StoryboardSlideInput) => s + sl.seconds, 0)
-    const secs3 = slides.slice(third * 2).reduce((s: number, sl: StoryboardSlideInput) => s + sl.seconds, 0)
+    // Fallback: simple 3-section split over the beats
+    const beats = (req.body.curvePoints as CurvePoint[]) ?? []
+    const total = (req.body.totalSeconds as number)
+      ?? beats.reduce((s, p) => s + (p.durationSeconds ?? 90), 0)
+    const third = Math.max(1, Math.floor(beats.length / 3))
+    const sumSecs = (arr: CurvePoint[]) =>
+      arr.reduce((s, p) => s + (p.durationSeconds ?? Math.round(total / (beats.length || 1))), 0)
+    const secs1 = sumSecs(beats.slice(0, third))
+    const secs2 = sumSecs(beats.slice(third, third * 2))
+    const secs3 = sumSecs(beats.slice(third * 2))
+    const pct = (s: number) => (total > 0 ? Math.round((s / total) * 100) : 0)
 
-    const fallback: PitchData = {
-      overallNarrative: `Esta presentación recorre un arco narrativo de tres actos. Comienza estableciendo el contexto y despertando la atención de la audiencia, avanza hacia el desarrollo de la propuesta de valor con datos y evidencia, y cierra con un llamado a la acción claro y memorable. El presentador debe mantener energía constante, adaptar el tono a cada momento emocional de la curva, y asegurarse de que cada slide refuerce el mensaje central.`,
+    const fallback: ScriptData = {
+      overallNarrative: `Esta presentación recorre un arco narrativo de tres actos. Abre estableciendo el contexto y despertando la atención de la audiencia, avanza hacia el desarrollo de la propuesta de valor con evidencia, y cierra con un llamado a la acción claro y memorable. El presentador mantiene energía constante y adapta el tono a cada momento emocional de la curva.`,
       totalSeconds: total,
       sections: [
         {
-          slideRange: `Slides 1-${third}`,
+          beatRange: `Beats 1-${third}`,
           title: 'Apertura — Contexto y Gancho',
-          narrativeSummary: 'Establece el problema o contexto central. Despierta la curiosidad y la identificación de la audiencia con la situación que se va a abordar.',
+          keyMessage: 'Existe un problema relevante que vale la pena resolver ahora.',
+          whatToTell: 'Establece el problema o contexto central con un ejemplo concreto que la audiencia reconozca. Despierta curiosidad e identificación antes de proponer nada.',
+          toneOfVoice: 'Cercano y seguro. Habla como si compartieras algo importante; evita el tono de lectura.',
+          transition: 'Del problema pasamos naturalmente a cómo se resuelve.',
+          keyQuestions: ['¿Cuántos de ustedes han enfrentado este problema?'],
           durationSeconds: secs1,
-          durationPercent: Math.round((secs1 / total) * 100),
-          toneOfVoice: 'Cercano y seguro. Habla como si compartieras un secreto importante. Evita el tono de lectura.',
-          suggestedActions: ['Inicia de pie, sin diapositiva en pantalla, mirando al público', 'Haz una pregunta retórica para romper el hielo', 'Camina hacia el frente del escenario al revelar el dato principal'],
-          keyQuestions: ['¿Cuántos de ustedes han enfrentado este problema?', '¿Qué cambiaría si pudiéramos resolver esto hoy?'],
+          durationPercent: pct(secs1),
         },
         {
-          slideRange: `Slides ${third + 1}-${third * 2}`,
+          beatRange: `Beats ${third + 1}-${third * 2}`,
           title: 'Desarrollo — Propuesta y Evidencia',
-          narrativeSummary: 'Presenta la solución, los datos y la prueba de concepto. Es el núcleo argumentativo de la presentación.',
+          keyMessage: 'Hay una solución concreta respaldada por evidencia.',
+          whatToTell: 'Presenta la solución, los datos y la prueba de concepto. Es el núcleo argumentativo: conecta cada dato con el problema de la apertura.',
+          toneOfVoice: 'Experto pero accesible. Usa pausas después de los datos clave.',
+          transition: 'Con la evidencia sobre la mesa, dirigimos a la audiencia hacia la acción.',
+          keyQuestions: ['¿Ven por qué este número es significativo?'],
           durationSeconds: secs2,
-          durationPercent: Math.round((secs2 / total) * 100),
-          toneOfVoice: 'Experto pero accesible. Usa pausas después de los datos clave para que la audiencia procese.',
-          suggestedActions: ['Señala los datos sin leerlos en voz alta', 'Haz una pausa de 3 segundos después de revelar la cifra más importante', 'Usa analogías si el tema es técnico'],
-          keyQuestions: ['¿Ven por qué este número es significativo?', '¿Qué implicaciones tiene esto para ustedes?'],
+          durationPercent: pct(secs2),
         },
         {
-          slideRange: `Slides ${third * 2 + 1}-${slides.length}`,
+          beatRange: `Beats ${third * 2 + 1}-${beats.length}`,
           title: 'Cierre — Llamada a la Acción',
-          narrativeSummary: 'Recapitula el mensaje central y dirige a la audiencia hacia la acción deseada con claridad y urgencia.',
+          keyMessage: 'Este es el primer paso concreto que la audiencia debe dar.',
+          whatToTell: 'Recapitula el mensaje central y dirige a la audiencia hacia la acción deseada con claridad y urgencia.',
+          toneOfVoice: 'Directo y con convicción. Habla en presente, no en condicional.',
+          transition: 'Cierra con una frase corta y memorable.',
+          keyQuestions: ['¿Cuál es el primer paso que van a tomar?'],
           durationSeconds: secs3,
-          durationPercent: 100 - Math.round((secs1 / total) * 100) - Math.round((secs2 / total) * 100),
-          toneOfVoice: 'Directo y con convicción. Este no es el momento de dudar. Habla en presente, no en condicional.',
-          suggestedActions: ['Vuelve al centro del escenario', 'Mantén contacto visual con distintas personas del público', 'Termina con una frase corta, sin apurarte'],
-          keyQuestions: ['¿Qué pueden hacer hoy con esta información?', '¿Cuál es el primer paso que van a tomar?'],
+          durationPercent: 100 - pct(secs1) - pct(secs2),
         },
       ],
     }
 
-    res.json({ success: true, pitch: fallback, fallback: true })
+    res.json({ success: true, script: fallback, fallback: true })
   }
 })
 

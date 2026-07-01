@@ -8,10 +8,10 @@ export default function ExportStep() {
     <StepTransition className="max-w-5xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-          Exportar
+          Guión & Exportar
         </h1>
         <p className="mt-1 text-sm text-neutral-500">
-          Preview final y guía de diseño para Canva.
+          Genera el guión narrativo y expórtalo como brief para crear la presentación en Claude Design.
         </p>
       </div>
 
