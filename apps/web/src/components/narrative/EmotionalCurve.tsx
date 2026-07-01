@@ -107,7 +107,7 @@ export default function EmotionalCurve({ state, projectId, context, onChange, on
             {selectedFw ? `Framework: ${selectedFw.name}` : 'Selecciona un framework primero'}
           </div>
           <div className="mt-1 text-xs text-neutral-400">
-            La curva emocional define la intensidad y emoción de cada slide.
+            La curva emocional define la intensidad y emoción de cada momento (beat).
           </div>
         </div>
         <button
@@ -132,7 +132,7 @@ export default function EmotionalCurve({ state, projectId, context, onChange, on
           <div>
             <div className="text-sm font-bold text-neutral-800">Arco narrativo aprobado</div>
             <div className="text-xs text-emerald-700">
-              {curvePoints.length} slides · {Math.round(totalSecs / 60)} min · v{state.curveVersion}
+              {curvePoints.length} momentos · {Math.round(totalSecs / 60)} min · v{state.curveVersion}
             </div>
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function EmotionalCurve({ state, projectId, context, onChange, on
       {pt && (
         <div className="rounded-xl border border-neutral-100 bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
-            <div className="text-sm font-bold text-neutral-800">Slide {pt.slide} — {pt.fullLabel || pt.label}</div>
+            <div className="text-sm font-bold text-neutral-800">Momento {pt.slide} — {pt.fullLabel || pt.label}</div>
             {pt.modified && (
               <button onClick={() => reset(active)} className="flex items-center gap-1 text-[11px] text-neutral-400 hover:text-neutral-600">
                 <RotateCcw size={10} /> restaurar
@@ -268,13 +268,13 @@ export default function EmotionalCurve({ state, projectId, context, onChange, on
                 type="text"
                 value={pt.suggestedTitle ?? ''}
                 onChange={(e) => update(active, { suggestedTitle: e.target.value })}
-                placeholder="Título de la slide…"
+                placeholder="Título del momento…"
                 className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs outline-none focus:border-neutral-400"
               />
               <textarea
                 value={pt.contentDirection ?? ''}
                 onChange={(e) => update(active, { contentDirection: e.target.value })}
-                placeholder="¿Qué comunica esta slide?"
+                placeholder="¿Qué comunica este momento?"
                 rows={2}
                 className="resize-none rounded-lg border border-neutral-200 px-3 py-1.5 text-xs outline-none focus:border-neutral-400"
               />

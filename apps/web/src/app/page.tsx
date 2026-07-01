@@ -1,11 +1,9 @@
 import Link from 'next/link'
 
 const STEPS = [
-  { num: '01', label: 'Diagnóstico', color: '#818CF8' },
-  { num: '02', label: 'Narrativa',   color: '#34D399' },
-  { num: '03', label: 'Diseño',      color: '#F472B6' },
-  { num: '04', label: 'Evaluación',  color: '#FBBF24' },
-  { num: '05', label: 'Exportar',    color: '#60A5FA' },
+  { num: '01', label: 'Diagnóstico',      color: '#818CF8' },
+  { num: '02', label: 'Narrativa',        color: '#34D399' },
+  { num: '03', label: 'Guión & Exportar', color: '#60A5FA' },
 ]
 
 export default function Home() {
@@ -80,10 +78,10 @@ export default function Home() {
       {/* ── Tagline ── */}
       <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', marginBottom: 48 }}>
         <p style={{ fontSize: 17, fontWeight: 500, color: 'var(--text-mid)', margin: '0 0 8px', letterSpacing: '-0.01em' }}>
-          Transforma cualquier contenido en un pitch deck extraordinario
+          Convierte tu contenido en una narrativa y un guión de alto impacto
         </p>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-          Narrativa en tres actos · Diseño por IA · Exporta en PPTX
+          Diagnóstico · Curva narrativa · Guión listo para diseñar en Claude Design
         </p>
       </div>
 

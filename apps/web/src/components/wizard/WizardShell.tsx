@@ -6,9 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   MessageSquareText,
   BookOpen,
-  Layers,
-  CheckCircle,
-  Download,
+  FileText,
   RotateCcw,
   AlertTriangle,
   Sun,
@@ -18,11 +16,9 @@ import { useAppStore } from '@/store'
 import { useTheme } from '@/components/ThemeProvider'
 
 const STEPS = [
-  { key: 'context',   label: 'Diagnóstico', icon: MessageSquareText, path: 'context' },
-  { key: 'narrative', label: 'Narrativa',   icon: BookOpen,          path: 'narrative' },
-  { key: 'design',    label: 'Diseño',      icon: Layers,            path: 'design' },
-  { key: 'review',    label: 'Evaluación',  icon: CheckCircle,       path: 'review' },
-  { key: 'export',    label: 'Exportar',    icon: Download,          path: 'export' },
+  { key: 'context',   label: 'Diagnóstico',       icon: MessageSquareText, path: 'context' },
+  { key: 'narrative', label: 'Narrativa',         icon: BookOpen,          path: 'narrative' },
+  { key: 'export',    label: 'Guión & Exportar',  icon: FileText,          path: 'export' },
 ] as const
 
 export type StepKey = (typeof STEPS)[number]['key']
@@ -78,7 +74,7 @@ function ResetModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: 
           ¿Borrar todo el contenido?
         </p>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 24px', lineHeight: 1.6 }}>
-          Se eliminarán el diagnóstico, narrativa, diseño y evaluación del proyecto actual. Esta acción no se puede deshacer.
+          Se eliminarán el diagnóstico, la narrativa y el guión del proyecto actual. Esta acción no se puede deshacer.
         </p>
 
         <div style={{ display: 'flex', gap: 10 }}>

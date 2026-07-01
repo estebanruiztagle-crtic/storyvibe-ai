@@ -7,8 +7,6 @@ import path from 'path'
 import { healthRouter } from './routes/health'
 import { zone1Router } from './routes/zones/zone1'
 import { zone2Router } from './routes/zones/zone2'
-import { zone3Router } from './routes/zones/zone3'
-import { zone4Router } from './routes/zones/zone4'
 import zone5Router from './routes/zones/zone5'
 
 // Load .env from the api package root (local dev only; Vercel uses dashboard env vars)
@@ -61,8 +59,6 @@ app.use('/api/v1/zones', aiLimiter)
 app.use('/api/v1/health', healthRouter)
 app.use('/api/v1/zones/zone1', zone1Router)
 app.use('/api/v1/zones/zone2', zone2Router)
-app.use('/api/v1/zones/zone3', zone3Router)
-app.use('/api/v1/zones/zone4', zone4Router)
 app.use('/api/v1/zones/zone5', zone5Router)
 
 // 404 handler

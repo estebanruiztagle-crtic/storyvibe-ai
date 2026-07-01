@@ -2,10 +2,10 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { createContextSlice, type ContextSlice } from './slices/context'
 import { createNarrativeSlice, type NarrativeSlice } from './slices/narrative'
-import { createDesignSlice, type DesignSlice } from './slices/design'
-import { createReviewSlice, type ReviewSlice } from './slices/review'
 
-export type AppStore = ContextSlice & NarrativeSlice & DesignSlice & ReviewSlice & {
+export type AppStore = ContextSlice & NarrativeSlice & {
+  presentationTitle: string
+  setPresentationTitle: (t: string) => void
   resetProject: () => void
 }
 
@@ -14,15 +14,12 @@ export const useAppStore = create<AppStore>()(
     (set, get, api) => ({
       ...createContextSlice(set, get, api),
       ...createNarrativeSlice(set, get, api),
-      ...createDesignSlice(set, get, api),
-      ...createReviewSlice(set, get, api),
+      presentationTitle: '',
+      setPresentationTitle: (t) => set({ presentationTitle: t }),
       resetProject: () => {
         get().clearContext()
         get().clearNarrative()
-        get().clearDesign()
-        get().clearReview()
-        get().clearRedesign()
-        set({ presentationTitle: '', redesignApplied: false })
+        set({ presentationTitle: '' })
       },
     }),
     {
@@ -32,11 +29,7 @@ export const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         context: state.context,
         narrative: state.narrative,
-        design: state.design,
         presentationTitle: state.presentationTitle,
-        review: state.review,
-        redesign: state.redesign,
-        redesignApplied: state.redesignApplied,
       }),
     }
   )
